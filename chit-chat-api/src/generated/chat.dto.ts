@@ -1,6 +1,7 @@
 /**
  * Auto-generated TypeScript DTO for chat
  */
+
 export interface chatDTO {
   isGroup?: boolean;
   groupName?: string;
@@ -12,3 +13,4 @@ export interface chatDTO {
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
+

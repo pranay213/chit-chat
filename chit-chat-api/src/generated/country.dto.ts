@@ -1,6 +1,7 @@
 /**
  * Auto-generated TypeScript DTO for country
  */
+
 export interface countryDTO {
   name: string;
   code: string;
@@ -11,3 +12,4 @@ export interface countryDTO {
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
+

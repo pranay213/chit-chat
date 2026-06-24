@@ -1,6 +1,7 @@
 /**
  * Auto-generated TypeScript DTO for message
  */
+
 export interface messageDTO {
   chatId: string;
   senderId: string;
@@ -12,3 +13,4 @@ export interface messageDTO {
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
+

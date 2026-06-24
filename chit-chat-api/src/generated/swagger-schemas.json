@@ -1,6 +1,43 @@
 {
   "components": {
     "schemas": {
+      "admin": {
+        "title": "Admin",
+        "required": [
+          "email",
+          "passwordHash"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "passwordHash": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "SUPER_ADMIN",
+              "admin",
+              "support"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "_id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "chat": {
         "title": "Chat",
         "properties": {
@@ -110,6 +147,65 @@
             "items": {
               "type": "schemaobjectid"
             }
+          },
+          "_id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "otp": {
+        "title": "Otp",
+        "required": [
+          "identifier",
+          "otp"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "otp": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "_id": {
+            "type": "string"
+          }
+        }
+      },
+      "setting": {
+        "title": "Setting",
+        "properties": {
+          "smtpHost": {
+            "type": "string"
+          },
+          "smtpPort": {
+            "type": "number"
+          },
+          "smtpUser": {
+            "type": "string"
+          },
+          "smtpPass": {
+            "type": "string"
+          },
+          "smtpFromEmail": {
+            "type": "string"
+          },
+          "fast2smsApiKey": {
+            "type": "string"
+          },
+          "updatedBy": {
+            "type": "schemaobjectid"
           },
           "_id": {
             "type": "string"

@@ -1,6 +1,7 @@
 /**
  * Auto-generated TypeScript DTO for user
  */
+
 export interface userDTO {
   mobileNumber: string;
   email?: string;
@@ -18,3 +19,4 @@ export interface userDTO {
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
+

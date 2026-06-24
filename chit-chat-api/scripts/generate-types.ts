@@ -4,7 +4,7 @@ import m2s from 'mongoose-to-swagger';
 
 // Dynamically read models
 const modelsDir = path.join(process.cwd(), 'src/models');
-const modelFiles = fs.readdirSync(modelsDir).filter(file => file.endsWith('.ts') && file !== 'index.ts');
+const modelFiles = fs.readdirSync(modelsDir).filter((file: string) => file.endsWith('.ts') && file !== 'index.ts');
 
 const generateDocsAndTypes = () => {
   const swaggerSchemas: Record<string, any> = {};
@@ -15,7 +15,7 @@ const generateDocsAndTypes = () => {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  modelFiles.forEach(file => {
+  modelFiles.forEach((file: string) => {
     const filePath = path.join(modelsDir, file);
     // dynamically require the model file
     const module = require(filePath);
