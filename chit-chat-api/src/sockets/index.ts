@@ -7,6 +7,7 @@ import { Session } from '../models/session';
 import { SocketEvents } from '../constants/socketEvents';
 import { ErrorMessages } from '../constants/errors';
 import logger from '../utils/logger';
+import { generateOllamaResponse } from '../services/ollama.service';
 
 // In-memory active connections mapping (userId -> Set of active socketIds)
 const onlineUsers = new Map<string, Set<string>>();
@@ -103,8 +104,8 @@ export const setupSockets = (io: Server) => {
           attachments: message.attachments,
           readBy: message.readBy,
           deliveredTo: message.deliveredTo,
-          createdAt: message.createdAt,
-          updatedAt: message.updatedAt
+          createdAt: message.createdAt || new Date(),
+          updatedAt: message.updatedAt || new Date()
         };
 
         // 3. Broadcast message instantly to all users in the room (including sender)
@@ -113,8 +114,123 @@ export const setupSockets = (io: Server) => {
         // 4. Save to DB and update Chat document in parallel background threads (non-blocking)
         Promise.all([
           message.save(),
-          Chat.findByIdAndUpdate(chatId, { lastMessage: message._id }).exec()
-        ]).catch(err => logger.error(`Error persisting message/chat status: ${err}`));
+          Chat.findByIdAndUpdate(chatId, { lastMessage: message._id, updatedAt: new Date() }).exec()
+        ]).then(async () => {
+          // --- Auto-reply Bot for 8125695499 ---
+          try {
+            const chat = await Chat.findById(chatId).lean();
+            if (!chat) return;
+            // Find if 8125695499 is in the participants (excluding the sender)
+            const botUser = await User.findOne({ mobileNumber: '8125695499' }).lean();
+            if (botUser) {
+              const botId = botUser._id.toString();
+              const participants = (chat.participants as any[]).map((p: any) => p.toString());
+              if (participants.includes(botId) && userId !== botId) {
+                const replies = [
+                  `Hey! Got your message: "${text || '...'}" 👋`,
+                  `Thanks for reaching out! How can I help you today?`,
+                  `Interesting! Tell me more... 🤔`,
+                  `Hi! I'm 8125695499's bot. "${text}" noted!`,
+                  `Roger that! "${text}" — I'll get back to you shortly.`,
+                  `Sure thing! Let me check on that for you.`,
+                ];
+                const replyText = replies[Math.floor(Math.random() * replies.length)];
+
+                // Wait 1–2 seconds before auto-reply for realism
+                await new Promise(res => setTimeout(res, 1000 + Math.random() * 1000));
+
+                const replyMsg = new Message({
+                  chatId,
+                  senderId: botId,
+                  text: replyText,
+                  readBy: [botId],
+                  deliveredTo: [botId]
+                });
+                await replyMsg.save();
+                await Chat.findByIdAndUpdate(chatId, { lastMessage: replyMsg._id, updatedAt: new Date() }).exec();
+
+                const replyPayload = {
+                  _id: replyMsg._id,
+                  chatId: replyMsg.chatId,
+                  senderId: {
+                    _id: botId,
+                    displayName: botUser.displayName || '8125695499',
+                    profileImage: (botUser as any).profileImage || ''
+                  },
+                  text: replyText,
+                  readBy: replyMsg.readBy,
+                  deliveredTo: replyMsg.deliveredTo,
+                  createdAt: replyMsg.createdAt || new Date(),
+                  updatedAt: replyMsg.updatedAt || new Date()
+                };
+                io.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE, replyPayload);
+              }
+            }
+          } catch (botErr) {
+            logger.error(`Auto-reply bot error: ${botErr}`);
+          }
+
+          // --- Ollama AI Chatbot for 9999999999 ---
+          try {
+            const chat = await Chat.findById(chatId).lean();
+            if (!chat) return;
+            const ollamaUser = await User.findOne({ mobileNumber: '9999999999' }).lean();
+            if (ollamaUser) {
+              const botId = ollamaUser._id.toString();
+              const participants = (chat.participants as any[]).map((p: any) => p.toString());
+              if (participants.includes(botId) && userId !== botId) {
+                // Emit typing indicator
+                io.to(`chat:${chatId}`).emit(SocketEvents.TYPING, { chatId, userId: botId });
+
+                // Fetch context of the last 10 messages
+                const prevMsgs = await Message.find({ chatId })
+                  .sort({ createdAt: -1 })
+                  .limit(10)
+                  .lean();
+                
+                // Format for Ollama
+                const messagesList: any[] = prevMsgs.reverse().map((m: any) => ({
+                  role: m.senderId.toString() === botId ? 'assistant' : 'user',
+                  content: m.text || '',
+                }));
+
+                // Get response from Ollama
+                const replyText = await generateOllamaResponse(messagesList);
+
+                // Stop typing indicator
+                io.to(`chat:${chatId}`).emit(SocketEvents.STOP_TYPING, { chatId, userId: botId });
+
+                const replyMsg = new Message({
+                  chatId,
+                  senderId: botId,
+                  text: replyText,
+                  readBy: [botId],
+                  deliveredTo: [botId]
+                });
+                await replyMsg.save();
+                await Chat.findByIdAndUpdate(chatId, { lastMessage: replyMsg._id, updatedAt: new Date() }).exec();
+
+                const replyPayload = {
+                  _id: replyMsg._id,
+                  chatId: replyMsg.chatId,
+                  senderId: {
+                    _id: botId,
+                    displayName: ollamaUser.displayName || 'Ollama AI Bot',
+                    profileImage: ollamaUser.profileImage || ''
+                  },
+                  text: replyText,
+                  readBy: replyMsg.readBy,
+                  deliveredTo: replyMsg.deliveredTo,
+                  createdAt: replyMsg.createdAt || new Date(),
+                  updatedAt: replyMsg.updatedAt || new Date()
+                };
+                io.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE, replyPayload);
+              }
+            }
+          } catch (ollamaErr) {
+            logger.error(`Ollama chatbot error: ${ollamaErr}`);
+          }
+        }).catch(err => logger.error(`Error persisting message/chat status: ${err}`));
 
         // 5. Acknowledge delivery to sender
         if (callback) callback({ success: true, message: populatedMessage });
@@ -154,6 +270,57 @@ export const setupSockets = (io: Server) => {
 
       // Broadcast acknowledgment
       socket.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE_DELIVERED, { chatId, messageId, userId });
+    });
+
+    // WebRTC Video Call Signaling
+    socket.on(SocketEvents.CALL_USER, (payload: { userToCall: string, signalData: any, from: string, name: string }) => {
+      const { userToCall, signalData, from, name } = payload;
+      const targetSockets = onlineUsers.get(userToCall);
+      if (targetSockets) {
+        targetSockets.forEach(socketId => {
+          io.to(socketId).emit(SocketEvents.INCOMING_CALL, { signal: signalData, from, name });
+        });
+      }
+    });
+
+    socket.on(SocketEvents.ANSWER_CALL, (payload: { to: string, signal: any }) => {
+      const { to, signal } = payload;
+      const targetSockets = onlineUsers.get(to);
+      if (targetSockets) {
+        targetSockets.forEach(socketId => {
+          io.to(socketId).emit(SocketEvents.CALL_ACCEPTED, signal);
+        });
+      }
+    });
+
+    socket.on(SocketEvents.REJECT_CALL, (payload: { to: string }) => {
+      const { to } = payload;
+      const targetSockets = onlineUsers.get(to);
+      if (targetSockets) {
+        targetSockets.forEach(socketId => {
+          io.to(socketId).emit(SocketEvents.CALL_REJECTED);
+        });
+      }
+    });
+
+    socket.on(SocketEvents.END_CALL, (payload: { to: string }) => {
+      const { to } = payload;
+      const targetSockets = onlineUsers.get(to);
+      if (targetSockets) {
+        targetSockets.forEach(socketId => {
+          io.to(socketId).emit(SocketEvents.CALL_ENDED);
+        });
+      }
+    });
+
+    socket.on(SocketEvents.WEBRTC_ICE_CANDIDATE, (payload: { to: string, candidate: any }) => {
+      const { to, candidate } = payload;
+      const targetSockets = onlineUsers.get(to);
+      if (targetSockets) {
+        targetSockets.forEach(socketId => {
+          io.to(socketId).emit(SocketEvents.WEBRTC_ICE_CANDIDATE, { candidate });
+        });
+      }
     });
 
     // Disconnect Event Handler

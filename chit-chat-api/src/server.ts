@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { connectDB } from './config/database';
-import { seedDefaultAdmins, seedCountries } from './utils/seeder';
+import { seedDefaultAdmins, seedCountries, seedChatBotUser } from './utils/seeder';
 import apiRoutes from './routes';
 import { setupSockets } from './sockets';
 import logger from './utils/logger';
@@ -17,6 +17,7 @@ dotenv.config();
 connectDB().then(() => {
   seedDefaultAdmins();
   seedCountries();
+  seedChatBotUser();
 });
 const app = express();
 const server = http.createServer(app);
@@ -28,12 +29,14 @@ const io = new Server(server, {
   },
 });
 setupSockets(io);
+app.set('io', io);
 // Middleware
 app.use(cors());
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(morgan('dev', { stream: { write: (message) => logger.info(message.trim()) } }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
 // Swagger API Docs
 setupSwagger(app);
 // Routes
@@ -43,3 +46,4 @@ const PORT = process.env.PORT as string;
 server.listen(PORT, () => {
   logger.info(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
+// Hot reload triggered for new env vars

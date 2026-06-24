@@ -1,98 +1,170 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Image, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+// Fallback for icons if vector-icons is not immediately available, though it usually is in Expo
+import { Ionicons } from '@expo/vector-icons';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+export default function WelcomeScreen() {
+  const router = useRouter();
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
+      
+      {/* Top Bar */}
+      <View style={styles.topBar}>
+        <View style={styles.langSelector}>
+          <Text style={styles.langText}>EN</Text>
+          <Ionicons name="chevron-down" size={16} color="#000" />
+        </View>
+      </View>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+      {/* Main Content */}
+      <View style={styles.content}>
+        <View style={styles.iconContainer}>
+          <Ionicons name="chatbubble-ellipses" size={40} color="#7E57C2" />
+        </View>
+        
+        <Text style={styles.title}>Chat freely,{'\n'}connect deeply.</Text>
+        
+        <Text style={styles.subtitle}>
+          A fast, secure and simple way{'\n'}to talk with anyone, anywhere.
+        </Text>
+      </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      {/* Illustration */}
+      <View style={styles.illustrationContainer}>
+        <Image 
+          source={require('../../assets/images/welcome_illustration.png')} 
+          style={styles.illustration}
+          resizeMode="contain"
+        />
+      </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      {/* Bottom Actions */}
+      <View style={styles.bottomSection}>
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={() => router.push('/login')} // Navigation for later
+        >
+          <Text style={styles.buttonText}>Get Started</Text>
+          <Ionicons name="arrow-forward" size={20} color="#FFF" style={styles.buttonIcon} />
+        </TouchableOpacity>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <View style={styles.footerRow}>
+          <Text style={styles.footerText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => router.push('/login')}>
+            <Text style={styles.loginText}>Log in</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#FAFAFA', // Soft off-white matching the design
+  },
+  topBar: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'android' ? 40 : 16,
+    paddingBottom: 16,
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
+  langSelector: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    backgroundColor: '#FFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  heroSection: {
-    alignItems: 'center',
+  langText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 4,
+    color: '#333',
+  },
+  content: {
+    paddingHorizontal: 32,
+    marginTop: 20,
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F3E5F5', // Light purple bg
     justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    alignItems: 'center',
+    marginBottom: 24,
   },
   title: {
-    textAlign: 'center',
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#1A1A1A',
+    lineHeight: 44,
+    marginBottom: 16,
   },
-  code: {
-    textTransform: 'uppercase',
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  illustrationContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  illustration: {
+    width: '100%',
+    height: '100%',
+    maxHeight: 300,
+  },
+  bottomSection: {
+    paddingHorizontal: 32,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 32,
+  },
+  button: {
+    backgroundColor: '#7E57C2', // Deep purple matching the design
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    borderRadius: 16,
+    marginBottom: 24,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonIcon: {
+    position: 'absolute',
+    right: 24,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerText: {
+    color: '#666',
+    fontSize: 15,
+  },
+  loginText: {
+    color: '#7E57C2',
+    fontSize: 15,
+    fontWeight: 'bold',
   },
 });

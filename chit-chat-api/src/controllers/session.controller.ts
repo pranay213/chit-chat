@@ -4,6 +4,7 @@ import { successResponse, errorResponse } from '../utils/response';
 import { executePaginatedQuery } from '../utils/queryParser';
 import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import logger from '../utils/logger';
+import { Server } from 'socket.io';
 
 // List sessions (For Admin Panel)
 export const getSessionsAdmin = async (req: Request, res: Response): Promise<void> => {
@@ -43,6 +44,20 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
 
     session.isActive = false;
     await session.save();
+
+    // Revoke socket connection actively
+    const io = req.app.get('io') as Server;
+    if (io) {
+      const sockets = await io.fetchSockets();
+      for (const socket of sockets) {
+        const socketToken = socket.handshake.auth?.token || socket.handshake.query?.token;
+        if (socketToken === session.token) {
+          logger.info(`Actively disconnecting socket for revoked session: ${session._id}`);
+          socket.emit('sessionRevoked', { message: 'Session has been revoked by admin' });
+          socket.disconnect(true);
+        }
+      }
+    }
 
     successResponse(res, 200, SuccessMessages.SESSION.REVOKED);
   } catch (error) {

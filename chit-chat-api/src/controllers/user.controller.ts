@@ -44,7 +44,11 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const populate = [{ path: 'country', select: 'name code dialCode flagUrl emoji' }];
-    const paginatedUsers = await executePaginatedQuery(User, req.query, populate);
+    const query = {
+      limit: 200, // Return up to 200 users by default
+      ...req.query
+    };
+    const paginatedUsers = await executePaginatedQuery(User, query, populate);
     successResponse(res, 200, 'USER_RETRIEVED', paginatedUsers);
   } catch (error) {
     logger.error(`Get Users error: ${error}`);

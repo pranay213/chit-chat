@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 
 export interface ParsedQuery {
   filter: any;
@@ -41,7 +41,7 @@ export const parseQueryParams = (reqQuery: any): ParsedQuery => {
   Object.keys(queryObj).forEach(key => {
     const val = queryObj[key];
 
-    if (typeof val === 'object' && val !== null) {
+    if (typeof val === 'object' && val !== null && !(val instanceof mongoose.Types.ObjectId)) {
       const fieldFilter: any = {};
       Object.keys(val).forEach(operator => {
         const opVal = val[operator];
@@ -93,7 +93,7 @@ export const parseQueryParams = (reqQuery: any): ParsedQuery => {
 
   // Pagination
   const page = Math.max(1, parseInt(reqQuery.page, 10) || 1);
-  const limit = Math.max(1, Math.min(100, parseInt(reqQuery.limit, 10) || 10)); // Cap limit at 100
+  const limit = Math.max(1, Math.min(1000, parseInt(reqQuery.limit, 10) || 10)); // Cap limit at 1000
   const skip = reqQuery.skip !== undefined ? Math.max(0, parseInt(reqQuery.skip, 10) || 0) : (page - 1) * limit;
 
   return { filter, sort, page, limit, skip };
