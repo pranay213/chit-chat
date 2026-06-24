@@ -1,15 +1,24 @@
 import { Response } from 'express';
+import { translateMessage } from './translation';
+
 export const successResponse = (res: Response, statusCode: number, message: string, data: any = {}) => {
+  const lang = (res.req?.headers['accept-language'] || 'en') as string;
+  const translatedMessage = translateMessage(message, lang);
+
   return res.status(statusCode).json({
     success: true,
-    message,
+    message: translatedMessage,
     ...data
   });
 };
+
 export const errorResponse = (res: Response, statusCode: number, message: string, error?: any) => {
+  const lang = (res.req?.headers['accept-language'] || 'en') as string;
+  const translatedMessage = translateMessage(message, lang);
+
   const payload: any = {
     success: false,
-    message
+    message: translatedMessage
   };
   if (error) {
     payload.error = error;
