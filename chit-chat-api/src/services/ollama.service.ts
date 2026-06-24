@@ -21,10 +21,21 @@ export const generateOllamaResponse = async (
   try {
     logger.info(`Sending chat request to Ollama with model: ${modelName}`);
 
+    // Prepend system prompt to enforce agent name
+    const systemPrompt: OllamaChatMessage = {
+      role: 'system',
+      content: 'The agent name is always "chit-chat api" based on ollama. Always identify yourself as "chit-chat api" based on ollama.'
+    };
+
+    const finalMessages = [
+      systemPrompt,
+      ...messages.filter(m => m.role !== 'system')
+    ];
+
     // Call Ollama SDK with streaming enabled
     const responseStream = await ollama.chat({
       model: modelName,
-      messages: messages.map(m => ({
+      messages: finalMessages.map(m => ({
         role: m.role,
         content: m.content
       })),
@@ -64,7 +75,7 @@ function getMockAIResponse(prompt: string): string {
   const cleanPrompt = prompt.toLowerCase();
   
   if (cleanPrompt.includes('hello') || cleanPrompt.includes('hi') || cleanPrompt.includes('hey')) {
-    return "Hello there! 🤖 I am Ollama AI Bot. Currently, I am running in Simulation Mode. How can I help you today?";
+    return "Hello there! 🤖 I am chit-chat api based on Ollama. Currently, I am running in Simulation Mode. How can I help you today?";
   }
   if (cleanPrompt.includes('help') || cleanPrompt.includes('what can you do')) {
     return "I can help you answer questions, write code snippets, mock conversation logs, or just chat! Since local Ollama is offline, I am running in Offline Simulation Mode.";
@@ -78,7 +89,7 @@ function getMockAIResponse(prompt: string): string {
   
   const mockResponses = [
     "That sounds interesting! Could you tell me more about that? 💡",
-    "I understand. In Offline Simulation Mode, I'm analyzing your prompt: '" + prompt + "'",
+    "I understand. As chit-chat api based on Ollama in Offline Simulation Mode, I'm analyzing your prompt: '" + prompt + "'",
     "Great question! 🤖 As an AI assistant, I recommend breaking this down into smaller, actionable steps.",
     "Interesting! Let's build a solution for this together. What do you think the first step should be?",
     "Got it! Let me know if you want me to write code, generate text, or explain a concept."
