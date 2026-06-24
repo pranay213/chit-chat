@@ -6,6 +6,7 @@ import { Session } from '../models/session';
 import { AdminRole } from '../constants/roles';
 import { successResponse, errorResponse } from '../utils/response';
 import { executePaginatedQuery } from '../utils/queryParser';
+import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import logger from '../utils/logger';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
@@ -16,13 +17,13 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
     const admin = await Admin.findOne({ email });
 
     if (!admin || !admin.isActive) {
-      errorResponse(res, 401, 'Invalid credentials or inactive account');
+      errorResponse(res, 401, ErrorMessages.AUTH.INACTIVE_ACCOUNT);
       return;
     }
 
     const isMatch = await bcrypt.compare(password, admin.passwordHash);
     if (!isMatch) {
-      errorResponse(res, 401, 'Invalid credentials');
+      errorResponse(res, 401, ErrorMessages.AUTH.INVALID_CREDENTIALS);
       return;
     }
 
@@ -45,10 +46,10 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
     const adminData = admin.toObject();
     delete (adminData as any).passwordHash;
 
-    successResponse(res, 200, 'Login successful', { token, admin: adminData });
+    successResponse(res, 200, SuccessMessages.AUTH.LOGIN_SUCCESS, { token, admin: adminData });
   } catch (error) {
     logger.error(`Login error: ${error}`);
-    errorResponse(res, 500, 'Server Error during login', error);
+    errorResponse(res, 500, ErrorMessages.ADMIN.LOGIN_FAILED, error);
   }
 };
 
@@ -58,7 +59,7 @@ export const createAdmin = async (req: Request, res: Response): Promise<void> =>
 
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
-      errorResponse(res, 400, 'Admin with this email already exists');
+      errorResponse(res, 400, ErrorMessages.AUTH.ADMIN_EXISTS);
       return;
     }
 
@@ -75,20 +76,20 @@ export const createAdmin = async (req: Request, res: Response): Promise<void> =>
     const adminData = newAdmin.toObject();
     delete (adminData as any).passwordHash;
 
-    successResponse(res, 201, 'Admin created successfully', { admin: adminData });
+    successResponse(res, 201, SuccessMessages.ADMIN.CREATED, { admin: adminData });
   } catch (error) {
     logger.error(`Create Admin error: ${error}`);
-    errorResponse(res, 500, 'Failed to create admin', error);
+    errorResponse(res, 500, ErrorMessages.ADMIN.CREATED_FAILED, error);
   }
 };
 
 export const getAdmins = async (req: Request, res: Response): Promise<void> => {
   try {
     const paginatedAdmins = await executePaginatedQuery(Admin, req.query, [], '-passwordHash');
-    successResponse(res, 200, 'Admins retrieved successfully', paginatedAdmins);
+    successResponse(res, 200, SuccessMessages.ADMIN.RETRIEVED, paginatedAdmins);
   } catch (error) {
     logger.error(`Get Admins error: ${error}`);
-    errorResponse(res, 500, 'Failed to fetch admins', error);
+    errorResponse(res, 500, ErrorMessages.ADMIN.RETRIEVED_FAILED, error);
   }
 };
 
@@ -109,14 +110,14 @@ export const updateAdmin = async (req: Request, res: Response): Promise<void> =>
     const admin = await Admin.findByIdAndUpdate(id, updateData, { new: true }).select('-passwordHash');
     
     if (!admin) {
-      errorResponse(res, 404, 'Admin not found');
+      errorResponse(res, 404, ErrorMessages.ADMIN.NOT_FOUND);
       return;
     }
 
-    successResponse(res, 200, 'Admin updated successfully', { admin });
+    successResponse(res, 200, SuccessMessages.ADMIN.UPDATED, { admin });
   } catch (error) {
     logger.error(`Update Admin error: ${error}`);
-    errorResponse(res, 500, 'Failed to update admin', error);
+    errorResponse(res, 500, ErrorMessages.ADMIN.UPDATED_FAILED, error);
   }
 };
 
@@ -126,13 +127,13 @@ export const deleteAdmin = async (req: Request, res: Response): Promise<void> =>
     const admin = await Admin.findByIdAndDelete(id);
 
     if (!admin) {
-      errorResponse(res, 404, 'Admin not found');
+      errorResponse(res, 404, ErrorMessages.ADMIN.NOT_FOUND);
       return;
     }
 
-    successResponse(res, 200, 'Admin deleted successfully');
+    successResponse(res, 200, SuccessMessages.ADMIN.DELETED);
   } catch (error) {
     logger.error(`Delete Admin error: ${error}`);
-    errorResponse(res, 500, 'Failed to delete admin', error);
+    errorResponse(res, 500, ErrorMessages.ADMIN.DELETED_FAILED, error);
   }
 };

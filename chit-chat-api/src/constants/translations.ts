@@ -20,12 +20,37 @@ export const translations: Record<string, Record<string, string>> = {
     'AUTH_USER_NOT_FOUND': 'User not found',
     'AUTH_FAILED_USER_RESOLVE': 'Failed to resolve user account',
     'AUTH_CURRENT_TOKEN_MISSING': 'Current authorization token not found',
+    'AUTH_OTP_SEND_FAILED': 'Failed to send OTP',
+    'AUTH_OTP_VERIFY_FAILED': 'Failed to verify OTP',
+    'AUTH_PROFILE_UPDATE_FAILED': 'Failed to update profile',
     // Chat Errors
     'CHAT_NOT_FOUND': 'Chat not found',
     'CHAT_ID_REQUIRED': 'Chat ID is required',
+    'CHAT_FETCHED_FAILED': 'Failed to fetch chats',
+    'CHAT_MESSAGES_FETCHED_FAILED': 'Failed to fetch messages',
+    'CHAT_CREATED_FAILED': 'Failed to create group chat',
     // System Errors
     'SYSTEM_SERVER_ERROR': 'Server Error during request',
     'SYSTEM_DB_FAILED': 'Database operation failed',
+    // Setting Errors
+    'SETTING_RETRIEVED_FAILED': 'Failed to retrieve settings',
+    'SETTING_UPDATED_FAILED': 'Failed to update settings',
+    // Admin Errors
+    'ADMIN_LOGIN_FAILED': 'Server Error during login',
+    'ADMIN_CREATED_FAILED': 'Failed to create admin',
+    'ADMIN_RETRIEVED_FAILED': 'Failed to fetch admins',
+    'ADMIN_UPDATED_FAILED': 'Failed to update admin',
+    'ADMIN_DELETED_FAILED': 'Failed to delete admin',
+    'ADMIN_NOT_FOUND': 'Admin not found',
+    // Role Errors
+    'ROLE_CREATED_FAILED': 'Failed to create role',
+    'ROLE_RETRIEVED_FAILED': 'Failed to retrieve roles',
+    'ROLE_NOT_FOUND': 'Role not found',
+    'ROLE_UPDATED_FAILED': 'Failed to update role',
+    'ROLE_DELETED_FAILED': 'Failed to delete role',
+    // Session Errors
+    'SESSION_RETRIEVED_FAILED': 'Failed to fetch sessions',
+    'SESSION_REVOKED_FAILED': 'Failed to revoke session',
     // Success Messages
     'AUTH_LOGIN_SUCCESS': 'Login successful',
     'AUTH_OTP_SENT': 'OTP sent successfully',
@@ -37,9 +62,17 @@ export const translations: Record<string, Record<string, string>> = {
     'ROLE_DELETED': 'Role deleted successfully',
     'SESSION_RETRIEVED': 'Sessions retrieved successfully',
     'SESSION_REVOKED': 'Session revoked successfully',
+    'SESSION_MY_SESSIONS_RETRIEVED': 'Your active sessions retrieved successfully',
+    'SESSION_OTHER_REVOKED': 'All other sessions revoked successfully',
     'CHAT_FETCHED': 'Chats fetched successfully',
     'CHAT_MESSAGES_FETCHED': 'Messages fetched successfully',
-    'CHAT_CREATED': 'Group chat created'
+    'CHAT_CREATED': 'Group chat created',
+    'SETTING_RETRIEVED': 'Settings retrieved successfully',
+    'SETTING_UPDATED': 'Settings updated successfully',
+    'ADMIN_CREATED': 'Admin created successfully',
+    'ADMIN_RETRIEVED': 'Admins retrieved successfully',
+    'ADMIN_UPDATED': 'Admin updated successfully',
+    'ADMIN_DELETED': 'Admin deleted successfully'
   },
   es: {
     // Auth Errors
@@ -62,12 +95,37 @@ export const translations: Record<string, Record<string, string>> = {
     'AUTH_USER_NOT_FOUND': 'Usuario no encontrado',
     'AUTH_FAILED_USER_RESOLVE': 'Error al resolver la cuenta del usuario',
     'AUTH_CURRENT_TOKEN_MISSING': 'Token de autorización actual no encontrado',
+    'AUTH_OTP_SEND_FAILED': 'Error al enviar el OTP',
+    'AUTH_OTP_VERIFY_FAILED': 'Error al verificar el OTP',
+    'AUTH_PROFILE_UPDATE_FAILED': 'Error al actualizar el perfil',
     // Chat Errors
     'CHAT_NOT_FOUND': 'Chat no encontrado',
     'CHAT_ID_REQUIRED': 'Se requiere el ID de chat',
+    'CHAT_FETCHED_FAILED': 'Error al recuperar los chats',
+    'CHAT_MESSAGES_FETCHED_FAILED': 'Error al recuperar los mensajes',
+    'CHAT_CREATED_FAILED': 'Error al crear el chat grupal',
     // System Errors
     'SYSTEM_SERVER_ERROR': 'Error del servidor durante la solicitud',
     'SYSTEM_DB_FAILED': 'Operación de base de datos fallida',
+    // Setting Errors
+    'SETTING_RETRIEVED_FAILED': 'Error al recuperar la configuración',
+    'SETTING_UPDATED_FAILED': 'Error al actualizar la configuración',
+    // Admin Errors
+    'ADMIN_LOGIN_FAILED': 'Error del servidor durante el inicio de sesión',
+    'ADMIN_CREATED_FAILED': 'Error al crear el administrador',
+    'ADMIN_RETRIEVED_FAILED': 'Error al recuperar los administradores',
+    'ADMIN_UPDATED_FAILED': 'Error al actualizar el administrador',
+    'ADMIN_DELETED_FAILED': 'Error al eliminar el administrador',
+    'ADMIN_NOT_FOUND': 'Administrador no encontrado',
+    // Role Errors
+    'ROLE_CREATED_FAILED': 'Error al crear el rol',
+    'ROLE_RETRIEVED_FAILED': 'Error al recuperar los roles',
+    'ROLE_NOT_FOUND': 'Rol no encontrado',
+    'ROLE_UPDATED_FAILED': 'Error al actualizar el rol',
+    'ROLE_DELETED_FAILED': 'Error al eliminar el rol',
+    // Session Errors
+    'SESSION_RETRIEVED_FAILED': 'Error al recuperar las sesiones',
+    'SESSION_REVOKED_FAILED': 'Error al revocar la sesión',
     // Success Messages
     'AUTH_LOGIN_SUCCESS': 'Inicio de sesión exitoso',
     'AUTH_OTP_SENT': 'OTP enviado con éxito',
@@ -79,8 +137,16 @@ export const translations: Record<string, Record<string, string>> = {
     'ROLE_DELETED': 'Rol eliminado con éxito',
     'SESSION_RETRIEVED': 'Sesiones recuperadas con éxito',
     'SESSION_REVOKED': 'Sesión revocada con éxito',
+    'SESSION_MY_SESSIONS_RETRIEVED': 'Sus sesiones activas recuperadas con éxito',
+    'SESSION_OTHER_REVOKED': 'Todas las demás sesiones revocadas con éxito',
     'CHAT_FETCHED': 'Chats recuperados con éxito',
     'CHAT_MESSAGES_FETCHED': 'Mensajes recuperados con éxito',
-    'CHAT_CREATED': 'Chat grupal creado con éxito'
+    'CHAT_CREATED': 'Chat grupal creado con éxito',
+    'SETTING_RETRIEVED': 'Configuración recuperada con éxito',
+    'SETTING_UPDATED': 'Configuración actualizada con éxito',
+    'ADMIN_CREATED': 'Administrador creado con éxito',
+    'ADMIN_RETRIEVED': 'Administradores recuperados con éxito',
+    'ADMIN_UPDATED': 'Administrador actualizado con éxito',
+    'ADMIN_DELETED': 'Administrador eliminado con éxito'
   }
 };

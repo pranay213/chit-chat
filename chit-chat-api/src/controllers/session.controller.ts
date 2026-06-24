@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Session } from '../models/session';
 import { successResponse, errorResponse } from '../utils/response';
 import { executePaginatedQuery } from '../utils/queryParser';
+import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import logger from '../utils/logger';
 
 // List sessions (For Admin Panel)
@@ -12,10 +13,10 @@ export const getSessionsAdmin = async (req: Request, res: Response): Promise<voi
       { path: 'adminId', select: 'email role' }
     ];
     const paginatedSessions = await executePaginatedQuery(Session, req.query, populate);
-    successResponse(res, 200, 'Sessions retrieved successfully', paginatedSessions);
+    successResponse(res, 200, SuccessMessages.SESSION.RETRIEVED, paginatedSessions);
   } catch (error) {
     logger.error(`Get Sessions Admin error: ${error}`);
-    errorResponse(res, 500, 'Failed to fetch sessions', error);
+    errorResponse(res, 500, ErrorMessages.SESSION.RETRIEVED_FAILED, error);
   }
 };
 
@@ -27,7 +28,7 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
     // Find the session
     const session = await Session.findById(id);
     if (!session) {
-      errorResponse(res, 404, 'Session not found');
+      errorResponse(res, 404, ErrorMessages.AUTH.SESSION_NOT_FOUND);
       return;
     }
 
@@ -35,7 +36,7 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
     if ((req as any).user && (req as any).user.role === 'user') {
       const currentUserId = (req as any).user.id;
       if (session.userId?.toString() !== currentUserId) {
-        errorResponse(res, 403, 'Unauthorized to revoke this session');
+        errorResponse(res, 403, ErrorMessages.AUTH.SESSION_REVOKE_UNAUTHORIZED);
         return;
       }
     }
@@ -43,10 +44,10 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
     session.isActive = false;
     await session.save();
 
-    successResponse(res, 200, 'Session revoked successfully');
+    successResponse(res, 200, SuccessMessages.SESSION.REVOKED);
   } catch (error) {
     logger.error(`Revoke Session error: ${error}`);
-    errorResponse(res, 500, 'Failed to revoke session', error);
+    errorResponse(res, 500, ErrorMessages.SESSION.REVOKED_FAILED, error);
   }
 };
 
@@ -60,10 +61,10 @@ export const getMySessionsMobile = async (req: Request, res: Response): Promise<
       isActive: true
     };
     const paginatedSessions = await executePaginatedQuery(Session, query, [], '-token');
-    successResponse(res, 200, 'Your active sessions retrieved successfully', paginatedSessions);
+    successResponse(res, 200, SuccessMessages.SESSION.MY_SESSIONS_RETRIEVED, paginatedSessions);
   } catch (error) {
     logger.error(`Get My Sessions Mobile error: ${error}`);
-    errorResponse(res, 500, 'Failed to fetch your sessions', error);
+    errorResponse(res, 500, ErrorMessages.SESSION.RETRIEVED_FAILED, error);
   }
 };
 
@@ -74,7 +75,7 @@ export const revokeOtherSessionsMobile = async (req: Request, res: Response): Pr
     const currentToken = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!currentToken) {
-      errorResponse(res, 400, 'Current authorization token not found');
+      errorResponse(res, 400, ErrorMessages.AUTH.CURRENT_TOKEN_MISSING);
       return;
     }
 
@@ -84,11 +85,11 @@ export const revokeOtherSessionsMobile = async (req: Request, res: Response): Pr
       { $set: { isActive: false } }
     );
 
-    successResponse(res, 200, 'All other sessions revoked successfully', {
+    successResponse(res, 200, SuccessMessages.SESSION.OTHER_REVOKED, {
       revokedCount: result.modifiedCount
     });
   } catch (error) {
     logger.error(`Revoke Other Sessions Mobile error: ${error}`);
-    errorResponse(res, 500, 'Failed to revoke other sessions', error);
+    errorResponse(res, 500, ErrorMessages.SESSION.REVOKED_FAILED, error);
   }
 };

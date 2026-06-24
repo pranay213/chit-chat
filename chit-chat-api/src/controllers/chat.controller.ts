@@ -4,6 +4,7 @@ import { Chat } from '../models/chat';
 import { Message } from '../models/message';
 import { successResponse, errorResponse } from '../utils/response';
 import { executePaginatedQuery } from '../utils/queryParser';
+import { ErrorMessages, SuccessMessages } from '../constants/errors';
 
 export const getUserChats = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -17,9 +18,9 @@ export const getUserChats = async (req: Request, res: Response): Promise<void> =
       { path: 'lastMessage' }
     ];
     const paginatedChats = await executePaginatedQuery(Chat, query, populate);
-    successResponse(res, 200, 'Chats fetched successfully', paginatedChats);
+    successResponse(res, 200, SuccessMessages.CHAT.FETCHED, paginatedChats);
   } catch (error) {
-    errorResponse(res, 500, 'Failed to fetch chats', error);
+    errorResponse(res, 500, ErrorMessages.CHAT.FETCHED_FAILED, error);
   }
 };
 
@@ -36,9 +37,9 @@ export const getChatMessages = async (req: Request, res: Response): Promise<void
     // Default messages sorting to oldest first (createdAt ascending) if no sort query parameter is supplied
     const finalQuery = { sort: 'createdAt', ...req.query };
     const paginatedMessages = await executePaginatedQuery(Message, { ...query, ...finalQuery }, populate);
-    successResponse(res, 200, 'Messages fetched successfully', paginatedMessages);
+    successResponse(res, 200, SuccessMessages.CHAT.MESSAGES_FETCHED, paginatedMessages);
   } catch (error) {
-    errorResponse(res, 500, 'Failed to fetch messages', error);
+    errorResponse(res, 500, ErrorMessages.CHAT.MESSAGES_FETCHED_FAILED, error);
   }
 };
 
@@ -51,8 +52,8 @@ export const createGroupChat = async (req: Request, res: Response): Promise<void
       participants: [...participants, adminId],
       admins: [adminId]
     });
-    successResponse(res, 201, 'Group chat created', { chat });
+    successResponse(res, 201, SuccessMessages.CHAT.CREATED, { chat });
   } catch (error) {
-    errorResponse(res, 500, 'Failed to create group chat', error);
+    errorResponse(res, 500, ErrorMessages.CHAT.CREATED_FAILED, error);
   }
 };
