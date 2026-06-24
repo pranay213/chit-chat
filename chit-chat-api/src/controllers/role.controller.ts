@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Role } from '../models/role';
 import { successResponse, errorResponse } from '../utils/response';
+import { executePaginatedQuery } from '../utils/queryParser';
 import logger from '../utils/logger';
 
 export const createRole = async (req: Request, res: Response): Promise<void> => {
@@ -33,8 +34,8 @@ export const createRole = async (req: Request, res: Response): Promise<void> => 
 
 export const getRoles = async (req: Request, res: Response): Promise<void> => {
   try {
-    const roles = await Role.find();
-    successResponse(res, 200, 'Roles retrieved successfully', { roles });
+    const paginatedRoles = await executePaginatedQuery(Role, req.query);
+    successResponse(res, 200, 'Roles retrieved successfully', paginatedRoles);
   } catch (error) {
     logger.error(`Get Roles error: ${error}`);
     errorResponse(res, 500, 'Failed to retrieve roles', error);

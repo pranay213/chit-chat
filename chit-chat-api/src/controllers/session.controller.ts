@@ -1,25 +1,18 @@
 import { Request, Response } from 'express';
 import { Session } from '../models/session';
 import { successResponse, errorResponse } from '../utils/response';
+import { executePaginatedQuery } from '../utils/queryParser';
 import logger from '../utils/logger';
 
 // List sessions (For Admin Panel)
 export const getSessionsAdmin = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userType, userId, adminId, isActive } = req.query;
-    
-    const query: any = {};
-    if (userType) query.userType = userType;
-    if (userId) query.userId = userId;
-    if (adminId) query.adminId = adminId;
-    if (isActive !== undefined) query.isActive = isActive === 'true';
-
-    const sessions = await Session.find(query)
-      .populate('userId', 'email mobileNumber username displayName')
-      .populate('adminId', 'email role')
-      .sort({ createdAt: -1 });
-
-    successResponse(res, 200, 'Sessions retrieved successfully', { sessions });
+    const populate = [
+      { path: 'userId', select: 'email mobileNumber username displayName' },
+      { path: 'adminId', select: 'email role' }
+    ];
+    const paginatedSessions = await executePaginatedQuery(Session, req.query, populate);
+    successResponse(res, 200, 'Sessions retrieved successfully', paginatedSessions);
   } catch (error) {
     logger.error(`Get Sessions Admin error: ${error}`);
     errorResponse(res, 500, 'Failed to fetch sessions', error);
@@ -61,12 +54,13 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
 export const getMySessionsMobile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user.id;
-    
-    const sessions = await Session.find({ userId, isActive: true })
-      .select('-token') // Do not return the actual token for safety
-      .sort({ updatedAt: -1 });
-
-    successResponse(res, 200, 'Your active sessions retrieved successfully', { sessions });
+    const query = {
+      ...req.query,
+      userId,
+      isActive: true
+    };
+    const paginatedSessions = await executePaginatedQuery(Session, query, [], '-token');
+    successResponse(res, 200, 'Your active sessions retrieved successfully', paginatedSessions);
   } catch (error) {
     logger.error(`Get My Sessions Mobile error: ${error}`);
     errorResponse(res, 500, 'Failed to fetch your sessions', error);

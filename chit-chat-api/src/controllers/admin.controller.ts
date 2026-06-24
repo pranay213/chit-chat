@@ -5,6 +5,7 @@ import { Admin } from '../models/admin';
 import { Session } from '../models/session';
 import { AdminRole } from '../constants/roles';
 import { successResponse, errorResponse } from '../utils/response';
+import { executePaginatedQuery } from '../utils/queryParser';
 import logger from '../utils/logger';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
@@ -83,8 +84,8 @@ export const createAdmin = async (req: Request, res: Response): Promise<void> =>
 
 export const getAdmins = async (req: Request, res: Response): Promise<void> => {
   try {
-    const admins = await Admin.find().select('-passwordHash');
-    successResponse(res, 200, 'Admins retrieved successfully', { admins });
+    const paginatedAdmins = await executePaginatedQuery(Admin, req.query, [], '-passwordHash');
+    successResponse(res, 200, 'Admins retrieved successfully', paginatedAdmins);
   } catch (error) {
     logger.error(`Get Admins error: ${error}`);
     errorResponse(res, 500, 'Failed to fetch admins', error);
