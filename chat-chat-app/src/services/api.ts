@@ -2,12 +2,15 @@ import Constants from 'expo-constants';
 
 // Dynamically resolve local development IP for Android/iOS physical devices & simulators
 const getApiUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  
   // If in web browser, localhost is fine.
   // Otherwise, get the debugger host IP address.
   const debuggerHost = Constants.expoConfig?.hostUri || '';
   const host = debuggerHost.split(':')[0] || 'localhost';
   
-  // You can override this if needed, e.g. for production
   return `http://${host}:5000/api/v1/mobile`;
 };
 
