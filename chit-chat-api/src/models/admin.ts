@@ -1,9 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-export enum AdminRole {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  ADMIN = 'admin',
-  SUPPORT = 'support'
-}
+import { AdminRole } from '../constants/roles';
 export interface IAdmin extends Document {
   email: string;
   passwordHash: string;

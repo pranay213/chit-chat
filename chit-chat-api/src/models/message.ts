@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
+import { MessageAttachmentType } from '../constants/messages';
 interface Attachment {
-  type: 'image' | 'video' | 'document' | 'audio';
+  type: MessageAttachmentType;
   url: string;
   name?: string;
   size?: number;
@@ -20,7 +21,7 @@ const messageSchema = new Schema<IMessage>(
     text: { type: String },
     attachments: [
       {
-        type: { type: String, enum: ['image', 'video', 'document', 'audio'] },
+        type: { type: String, enum: Object.values(MessageAttachmentType) },
         url: { type: String },
         name: { type: String },
         size: { type: Number },

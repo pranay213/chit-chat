@@ -33,7 +33,7 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
       return;
     }
     if (process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development') {
-      if (otp === '123456') {
+      if (otp === process.env.MOCK_OTP) {
         isOtpValid = true;
       } else {
         isOtpValid = await verifyOtpCode(email || mobileNumber, otp);

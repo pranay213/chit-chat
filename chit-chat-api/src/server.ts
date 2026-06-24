@@ -32,7 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/v1', apiRoutes);
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT as string;
 server.listen(PORT, () => {
   logger.info(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
