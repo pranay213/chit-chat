@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { connectDB } from './config/database';
+import { seedDefaultAdmins } from './utils/seeder';
 import apiRoutes from './routes';
 import { setupSockets } from './sockets';
 import logger from './utils/logger';
@@ -13,7 +14,9 @@ import { setupSwagger } from './utils/swagger';
 // Load environment variables
 dotenv.config();
 // Connect to Database
-connectDB();
+connectDB().then(() => {
+  seedDefaultAdmins();
+});
 const app = express();
 const server = http.createServer(app);
 // Setup Socket.IO

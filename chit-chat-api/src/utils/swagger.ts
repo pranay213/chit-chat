@@ -2,6 +2,10 @@ import swaggerUi from 'swagger-ui-express';
 import { Express, Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { Admin } from '../models/admin';
+import { AdminRole } from '../constants/roles';
 
 const getSwaggerCookie = (req: Request): string | null => {
   const cookieHeader = req.headers.cookie;
@@ -22,12 +26,18 @@ const swaggerAuth = (req: Request, res: Response, next: NextFunction) => {
     return next();
   }
 
-  const swaggerPassword = process.env.SWAGGER_PASSWORD || 'chit-chat-admin-2024';
-  const expectedSessionValue = Buffer.from(swaggerPassword).toString('base64');
   const session = getSwaggerCookie(req);
 
-  if (session === expectedSessionValue) {
-    return next();
+  if (session) {
+    try {
+      const JWT_SECRET = process.env.JWT_SECRET as string;
+      const decoded: any = jwt.verify(session, JWT_SECRET);
+      if (decoded && (decoded.role === AdminRole.SUPER_ADMIN || decoded.role === AdminRole.DEVELOPER)) {
+        return next();
+      }
+    } catch (error) {
+      // Invalid or expired token, proceed to login page
+    }
   }
 
   // Serve a beautiful glassmorphic login page for GET requests
@@ -159,12 +169,12 @@ const swaggerAuth = (req: Request, res: Response, next: NextFunction) => {
       <body>
         <div class="login-card">
           <div class="logo">Chit-Chat Docs</div>
-          <p class="subtitle">Enter credentials to unlock API documentation</p>
-          <div class="error-msg" id="errorBlock">Invalid username or password.</div>
+          <p class="subtitle">Enter Admin / Developer credentials to unlock</p>
+          <div class="error-msg" id="errorBlock">Access denied. Please check your credentials and role permissions.</div>
           <form id="loginForm">
             <div class="form-group">
-              <label for="username">Username</label>
-              <input type="text" id="username" required placeholder="admin" autocomplete="username">
+              <label for="email">Admin Email</label>
+              <input type="email" id="email" required placeholder="admin@example.com" autocomplete="email">
             </div>
             <div class="form-group">
               <label for="password">Password</label>
@@ -176,8 +186,8 @@ const swaggerAuth = (req: Request, res: Response, next: NextFunction) => {
         <script>
           document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
+            const emailVal = document.getElementById('email').value;
+            const passwordVal = document.getElementById('password').value;
             const errorBlock = document.getElementById('errorBlock');
             errorBlock.style.display = 'none';
 
@@ -185,15 +195,18 @@ const swaggerAuth = (req: Request, res: Response, next: NextFunction) => {
               const res = await fetch('/api-docs/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: u, password: p })
+                body: JSON.stringify({ email: emailVal, password: passwordVal })
               });
               
               if (res.ok) {
                 window.location.reload();
               } else {
+                const errData = await res.json();
+                errorBlock.textContent = errData.error || 'Invalid credentials';
                 errorBlock.style.display = 'block';
               }
             } catch (err) {
+              errorBlock.textContent = 'Connection error. Please try again.';
               errorBlock.style.display = 'block';
             }
           });
@@ -208,7 +221,6 @@ const swaggerAuth = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const setupSwagger = (app: Express) => {
-  // Read auto-generated swagger documentation (which contains both paths and schemas)
   const docsPath = path.join(process.cwd(), 'src/generated/swagger-docs.json');
   let swaggerDocument = {};
   if (fs.existsSync(docsPath)) {
@@ -253,18 +265,36 @@ export const setupSwagger = (app: Express) => {
   };
 
   // Define the POST login endpoint for Swagger UI's custom login page
-  app.post('/api-docs/login', (req: Request, res: Response) => {
-    const { username, password } = req.body;
-    const swaggerUser = process.env.SWAGGER_USER || 'admin';
-    const swaggerPassword = process.env.SWAGGER_PASSWORD || 'chit-chat-admin-2024';
+  app.post('/api-docs/login', async (req: Request, res: Response) => {
+    try {
+      const { email, password } = req.body;
+      const admin = await Admin.findOne({ email });
 
-    if (username === swaggerUser && password === swaggerPassword) {
-      const sessionValue = Buffer.from(swaggerPassword).toString('base64');
-      // Set HttpOnly cookie valid for 7 days
-      res.setHeader('Set-Cookie', `swagger_session=${sessionValue}; Path=/api-docs; HttpOnly; Max-Age=604800; SameSite=Lax`);
+      if (!admin || !admin.isActive) {
+        res.status(401).json({ error: 'Invalid credentials or inactive account' });
+        return;
+      }
+
+      const isMatch = await bcrypt.compare(password, admin.passwordHash);
+      if (!isMatch) {
+        res.status(401).json({ error: 'Invalid credentials' });
+        return;
+      }
+
+      // Check permissions: only SUPER_ADMIN and DEVELOPER roles can access Swagger UI
+      if (admin.role !== AdminRole.SUPER_ADMIN && admin.role !== AdminRole.DEVELOPER) {
+        res.status(403).json({ error: 'Access denied. You do not have permissions to access Swagger docs.' });
+        return;
+      }
+
+      const JWT_SECRET = process.env.JWT_SECRET as string;
+      const sessionToken = jwt.sign({ id: admin._id, role: admin.role }, JWT_SECRET, { expiresIn: '7d' });
+
+      // Set cookie for 7 days, scoped to root '/' to avoid path problems
+      res.setHeader('Set-Cookie', `swagger_session=${sessionToken}; Path=/; HttpOnly; Max-Age=604800; SameSite=Lax`);
       res.status(200).json({ success: true });
-    } else {
-      res.status(401).json({ error: 'Invalid credentials' });
+    } catch (error) {
+      res.status(500).json({ error: 'Server error during authentication' });
     }
   });
 

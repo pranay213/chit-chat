@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { successResponse } from '../utils/response';
 import { loginAdmin, createAdmin, getAdmins, updateAdmin, deleteAdmin } from '../controllers/admin.controller';
 import { getSettings, updateSettings } from '../controllers/setting.controller';
+import { createRole, getRoles, getRoleById, updateRole, deleteRole } from '../controllers/role.controller';
 import { authenticateAdmin, requireSuperAdmin } from '../middlewares/admin.middleware';
 
 const router = Router();
@@ -25,5 +26,12 @@ router.delete('/:id', requireSuperAdmin, deleteAdmin);
 // System Settings (Protected & SUPER_ADMIN only)
 router.get('/settings', requireSuperAdmin, getSettings);
 router.put('/settings', requireSuperAdmin, updateSettings);
+
+// Dynamic Role Management
+router.post('/roles', requireSuperAdmin, createRole);
+router.get('/roles', requireSuperAdmin, getRoles);
+router.get('/roles/:id', requireSuperAdmin, getRoleById);
+router.put('/roles/:id', requireSuperAdmin, updateRole);
+router.delete('/roles/:id', requireSuperAdmin, deleteRole);
 
 export default router;
