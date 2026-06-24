@@ -362,6 +362,85 @@ export default function ChatScreen() {
               renderItem={({ item }) => {
                 const isMe = item.senderId._id === 'current-user' || item.senderId._id === user?._id;
                 
+                // Render custom Call Logs in the Chat History
+                const isCallLog = item.text?.startsWith('CALL_LOG:');
+                if (isCallLog) {
+                  const parts = item.text.substring(9).split('|');
+                  const callType = parts[0] || 'audio';
+                  const callStatus = parts[1] || 'completed';
+                  const callDuration = parseInt(parts[2] || '0', 10);
+                  const isOutgoing = isMe;
+
+                  // Helper function to format call duration
+                  const formatCallDuration = (secs: number) => {
+                    if (secs === 0) return '';
+                    const mins = Math.floor(secs / 60);
+                    const remainingSecs = secs % 60;
+                    if (mins > 0) {
+                      return `${mins}m ${remainingSecs}s`;
+                    }
+                    return `${remainingSecs}s`;
+                  };
+
+                  let statusText = '';
+                  let statusIcon: any = 'arrow-up-right';
+                  let statusColor = '#00E676'; // Green for outbound completed
+                  
+                  if (callStatus === 'missed') {
+                    statusText = isOutgoing ? 'Outgoing Call (No Answer)' : 'Missed Call';
+                    statusIcon = isOutgoing ? 'arrow-up-right' : 'arrow-down-left';
+                    statusColor = '#FF3B30';
+                  } else if (callStatus === 'rejected') {
+                    statusText = isOutgoing ? 'Declined Call' : 'Rejected Call';
+                    statusIcon = isOutgoing ? 'arrow-up-right' : 'arrow-down-left';
+                    statusColor = '#E53935';
+                  } else {
+                    const durStr = formatCallDuration(callDuration);
+                    statusText = `${callType === 'video' ? 'Video' : 'Voice'} Call${durStr ? ` (${durStr})` : ''}`;
+                    statusIcon = isOutgoing ? 'arrow-up-right' : 'arrow-down-left';
+                    statusColor = '#00E676';
+                  }
+
+                  return (
+                    <View style={styles.callLogCenterWrapper}>
+                      <View style={styles.callLogBubble}>
+                        <View style={styles.callLogIconCircle}>
+                          <Ionicons 
+                            name={callType === 'video' ? 'videocam-outline' : 'call-outline'} 
+                            size={20} 
+                            color={callStatus === 'missed' ? '#FF3B30' : '#075E54'} 
+                          />
+                        </View>
+                        <View style={styles.callLogTextContainer}>
+                          <Text style={styles.callLogTitle}>{statusText}</Text>
+                          <View style={styles.callLogSubrow}>
+                            <Ionicons name={statusIcon} size={12} color={statusColor} style={{ marginRight: 4 }} />
+                            <Text style={styles.callLogTime}>
+                              {formatMessageTime(item.createdAt)}
+                            </Text>
+                          </View>
+                        </View>
+                        <TouchableOpacity 
+                          style={styles.callLogActionBtn}
+                          onPress={() => router.push({
+                            pathname: '/call',
+                            params: {
+                              chatId: chatId.toString(),
+                              type: callType,
+                              callerName: headerName,
+                              callerAvatar: headerAvatar || '',
+                              isGroup: isGroup ? 'true' : 'false',
+                              receiverId: (receiverId as string) || ''
+                            }
+                          })}
+                        >
+                          <Text style={styles.callLogActionText}>Call Back</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                }
+
                 if (item.attachments && item.attachments.length > 0) {
                   // Render Attachment (PDF)
                   const pdf = item.attachments[0];
@@ -685,5 +764,63 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
     backgroundColor: '#999',
     marginHorizontal: 3,
+  },
+  callLogCenterWrapper: {
+    alignItems: 'center',
+    marginVertical: 8,
+    width: '100%',
+  },
+  callLogBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9F9F9',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    width: '85%',
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  callLogIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F0F0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  callLogTextContainer: {
+    flex: 1,
+  },
+  callLogTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  callLogSubrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  callLogTime: {
+    fontSize: 11,
+    color: '#666',
+  },
+  callLogActionBtn: {
+    backgroundColor: '#075E54',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  callLogActionText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
 });

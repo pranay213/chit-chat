@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Contacts from 'expo-contacts/legacy';
 import { useAuth } from '../context/AuthContext';
@@ -31,10 +31,42 @@ interface Contact {
 
 export default function NewChatScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const isCall = params.isCall === 'true';
   const { token, user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleCallPress = async (contact: Contact, callType: 'audio' | 'video') => {
+    if (contact._id === user?._id) return;
+    if (!user || !token) return;
+    setLoading(true);
+    try {
+      const res = await api.createOrGetChat(user._id, contact._id, token);
+      const chat = res.chat;
+      if (chat) {
+        router.push({
+          pathname: '/call',
+          params: {
+            chatId: chat._id,
+            type: callType,
+            callerName: contact.displayName,
+            callerAvatar: contact.profileImage || '',
+            isGroup: 'false',
+            receiverId: contact._id
+          }
+        });
+      } else {
+        Alert.alert('Error', 'Could not start call');
+      }
+    } catch (err) {
+      console.error('Failed to start call session:', err);
+      Alert.alert('Error', 'Failed to start call session');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch all registered users to start chats with
   const fetchContacts = async () => {
@@ -233,7 +265,7 @@ export default function NewChatScreen() {
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>Select Contact</Text>
+            <Text style={styles.headerTitle}>{isCall ? 'New Call' : 'Select Contact'}</Text>
             <Text style={{ fontSize: 12, color: '#666' }}>{contacts.length} contacts</Text>
           </View>
         </View>
@@ -299,30 +331,59 @@ export default function NewChatScreen() {
             </View>
           );
         }}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.contactItem}
-            onPress={() => startChat(item)}
-          >
-            <View style={styles.avatarContainer}>
-              {item.profileImage ? (
-                <Image source={{ uri: item.profileImage }} style={styles.avatar} />
-              ) : (
-                <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                  <Text style={styles.avatarText}>{item.displayName.substring(0, 1).toUpperCase()}</Text>
+        renderItem={({ item }) => {
+          const handleContactPress = () => {
+            if (isCall) {
+              handleCallPress(item, 'audio');
+            } else {
+              startChat(item);
+            }
+          };
+
+          return (
+            <View style={styles.contactRowContainer}>
+              <TouchableOpacity 
+                style={[styles.contactItem, { flex: 1 }]}
+                onPress={handleContactPress}
+              >
+                <View style={styles.avatarContainer}>
+                  {item.profileImage ? (
+                    <Image source={{ uri: item.profileImage }} style={styles.avatar} />
+                  ) : (
+                    <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                      <Text style={styles.avatarText}>{item.displayName.substring(0, 1).toUpperCase()}</Text>
+                    </View>
+                  )}
+                  {item.status === 'online' && <View style={styles.onlineBadge} />}
+                </View>
+                
+                <View style={styles.contactDetails}>
+                  <Text style={styles.contactName}>{item.displayName}</Text>
+                  <Text style={styles.contactStatus}>
+                    {item.status === 'online' ? 'Online' : `Last seen ${item.lastSeen || 'recently'}`}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              {isCall && item._id !== user?._id && (
+                <View style={styles.callButtonsContainer}>
+                  <TouchableOpacity 
+                    style={styles.callActionIconBtn}
+                    onPress={() => handleCallPress(item, 'audio')}
+                  >
+                    <Ionicons name="call-outline" size={22} color="#075E54" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.callActionIconBtn}
+                    onPress={() => handleCallPress(item, 'video')}
+                  >
+                    <Ionicons name="videocam-outline" size={24} color="#075E54" />
+                  </TouchableOpacity>
                 </View>
               )}
-              {item.status === 'online' && <View style={styles.onlineBadge} />}
             </View>
-            
-            <View style={styles.contactDetails}>
-              <Text style={styles.contactName}>{item.displayName}</Text>
-              <Text style={styles.contactStatus}>
-                {item.status === 'online' ? 'Online' : `Last seen ${item.lastSeen || 'recently'}`}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+          );
+        }}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={() => (
           loading ? (
@@ -472,5 +533,26 @@ const styles = StyleSheet.create({
     marginTop: 40,
     color: '#999',
     fontSize: 16,
+  },
+  contactRowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+  },
+  callButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingRight: 24,
+  },
+  callActionIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F7F4',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

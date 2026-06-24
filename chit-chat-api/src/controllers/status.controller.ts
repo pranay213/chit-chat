@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Status } from '../models/status';
 import { successResponse, errorResponse } from '../utils/response';
+import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import mongoose from 'mongoose';
 
 export const createStatus = async (req: Request, res: Response): Promise<void> => {
@@ -9,7 +10,7 @@ export const createStatus = async (req: Request, res: Response): Promise<void> =
     const userId = (req as any).user.id;
 
     if (!content) {
-      errorResponse(res, 400, 'Content is required for status updates');
+      errorResponse(res, 400, ErrorMessages.STATUS.CONTENT_REQUIRED);
       return;
     }
 
@@ -23,9 +24,9 @@ export const createStatus = async (req: Request, res: Response): Promise<void> =
 
     const populated = await newStatus.populate('userId', 'displayName email mobileNumber profileImage');
 
-    successResponse(res, 201, 'Status created successfully', { status: populated });
+    successResponse(res, 201, SuccessMessages.STATUS.CREATED, { status: populated });
   } catch (error) {
-    errorResponse(res, 500, 'Failed to create status update', error);
+    errorResponse(res, 500, ErrorMessages.STATUS.CREATED_FAILED, error);
   }
 };
 
@@ -73,12 +74,12 @@ export const getStatuses = async (req: Request, res: Response): Promise<void> =>
 
     const recentStatuses = Array.from(otherGroupsMap.values());
 
-    successResponse(res, 200, 'Statuses retrieved successfully', {
+    successResponse(res, 200, SuccessMessages.STATUS.RETRIEVED, {
       myStatuses,
       recentStatuses
     });
   } catch (error) {
-    errorResponse(res, 500, 'Failed to retrieve statuses', error);
+    errorResponse(res, 500, ErrorMessages.STATUS.RETRIEVED_FAILED, error);
   }
 };
 
@@ -88,27 +89,68 @@ export const deleteStatus = async (req: Request, res: Response): Promise<void> =
     const userId = (req as any).user.id;
 
     if (!mongoose.Types.ObjectId.isValid(statusId)) {
-      errorResponse(res, 400, 'Invalid status ID format');
+      errorResponse(res, 400, ErrorMessages.STATUS.INVALID_ID);
       return;
     }
 
     const status = await Status.findById(statusId);
 
     if (!status) {
-      errorResponse(res, 404, 'Status update not found');
+      errorResponse(res, 404, ErrorMessages.STATUS.NOT_FOUND);
       return;
     }
 
     // Check ownership
     if (status.userId.toString() !== userId) {
-      errorResponse(res, 403, 'Unauthorized to delete this status update');
+      errorResponse(res, 403, ErrorMessages.STATUS.DELETE_UNAUTHORIZED);
       return;
     }
 
     await Status.findByIdAndDelete(statusId);
 
-    successResponse(res, 200, 'Status update deleted successfully');
+    successResponse(res, 200, SuccessMessages.STATUS.DELETED);
   } catch (error) {
-    errorResponse(res, 500, 'Failed to delete status update', error);
+    errorResponse(res, 500, ErrorMessages.STATUS.DELETED_FAILED, error);
+  }
+};
+
+export const updateStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const statusId = req.params.statusId as string;
+    const userId = (req as any).user.id;
+    const { content, backgroundColor, type, mediaUrl } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(statusId)) {
+      errorResponse(res, 400, ErrorMessages.STATUS.INVALID_ID);
+      return;
+    }
+
+    const status = await Status.findById(statusId);
+
+    if (!status) {
+      errorResponse(res, 404, ErrorMessages.STATUS.NOT_FOUND);
+      return;
+    }
+
+    // Check ownership
+    if (status.userId.toString() !== userId) {
+      errorResponse(res, 403, ErrorMessages.STATUS.UPDATE_UNAUTHORIZED);
+      return;
+    }
+
+    const updated = await Status.findByIdAndUpdate(
+      statusId,
+      {
+        content: content || status.content,
+        backgroundColor: backgroundColor || status.backgroundColor,
+        type: type || status.type,
+        mediaUrl: mediaUrl || status.mediaUrl
+      },
+      { new: true }
+    ).populate('userId', 'displayName email mobileNumber profileImage');
+
+    successResponse(res, 200, SuccessMessages.STATUS.UPDATED, { status: updated });
+  } catch (error) {
+    errorResponse(res, 500, ErrorMessages.STATUS.UPDATED_FAILED, error);
   }
 };

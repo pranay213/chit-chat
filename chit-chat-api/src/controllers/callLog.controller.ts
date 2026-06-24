@@ -1,6 +1,9 @@
 import { Response } from 'express';
 import { CallLog } from '../models/callLog';
+import { Message } from '../models/message';
+import { Chat } from '../models/chat';
 import { successResponse, errorResponse } from '../utils/response';
+import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import logger from '../utils/logger';
 
 // Custom request interface with user context from auth middleware
@@ -16,7 +19,7 @@ export const getCallLogs = async (req: any, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
-      errorResponse(res, 401, 'UNAUTHORIZED');
+      errorResponse(res, 401, ErrorMessages.AUTH.UNAUTHORIZED);
       return;
     }
 
@@ -28,10 +31,10 @@ export const getCallLogs = async (req: any, res: Response): Promise<void> => {
       .sort({ createdAt: -1 })
       .limit(100);
 
-    successResponse(res, 200, 'CALL_LOGS_RETRIEVED', { logs });
+    successResponse(res, 200, SuccessMessages.CALL_LOG.RETRIEVED, { logs });
   } catch (error) {
     logger.error(`Get Call Logs error: ${error}`);
-    errorResponse(res, 500, 'SERVER_ERROR', error);
+    errorResponse(res, 500, ErrorMessages.SYSTEM.SERVER_ERROR, error);
   }
 };
 
@@ -39,7 +42,7 @@ export const createCallLog = async (req: any, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
-      errorResponse(res, 401, 'UNAUTHORIZED');
+      errorResponse(res, 401, ErrorMessages.AUTH.UNAUTHORIZED);
       return;
     }
 
@@ -58,9 +61,45 @@ export const createCallLog = async (req: any, res: Response): Promise<void> => {
       .populate('callerId', 'displayName mobileNumber profileImage')
       .populate('receiverId', 'displayName mobileNumber profileImage');
 
-    successResponse(res, 201, 'CALL_LOG_CREATED', { log: populatedLog });
+    // Create a special message in the chat to log this call
+    if (chatId && populatedLog) {
+      const messageText = `CALL_LOG:${type}|${status}|${duration || 0}`;
+      const callMessage = await Message.create({
+        chatId,
+        senderId: userId,
+        text: messageText,
+        readBy: [userId],
+        deliveredTo: [userId]
+      });
+
+      // Update Chat's lastMessage
+      await Chat.findByIdAndUpdate(chatId, { lastMessage: callMessage._id, updatedAt: new Date() }).exec();
+
+      // Broadcast the message via Socket.IO if available
+      const io = req.app?.get('io');
+      if (io) {
+        const populatedMessage = {
+          _id: callMessage._id,
+          chatId: callMessage.chatId,
+          senderId: {
+            _id: userId,
+            displayName: (populatedLog.callerId as any).displayName || 'User',
+            profileImage: (populatedLog.callerId as any).profileImage || ''
+          },
+          text: callMessage.text,
+          attachments: callMessage.attachments || [],
+          readBy: callMessage.readBy,
+          deliveredTo: callMessage.deliveredTo,
+          createdAt: callMessage.createdAt,
+          updatedAt: callMessage.updatedAt
+        };
+        io.to(`chat:${chatId}`).emit('message', populatedMessage);
+      }
+    }
+
+    successResponse(res, 201, SuccessMessages.CALL_LOG.CREATED, { log: populatedLog });
   } catch (error) {
     logger.error(`Create Call Log error: ${error}`);
-    errorResponse(res, 500, 'SERVER_ERROR', error);
+    errorResponse(res, 500, ErrorMessages.SYSTEM.SERVER_ERROR, error);
   }
 };

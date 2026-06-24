@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { Country } from '../models/country';
 import { successResponse, errorResponse } from '../utils/response';
+import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import { executePaginatedQuery } from '../utils/queryParser';
 import { translateMessage } from '../utils/translation';
 
@@ -19,9 +20,9 @@ export const getCountries = async (req: Request, res: Response): Promise<void> =
       }));
     }
 
-    successResponse(res, 200, 'COUNTRY_RETRIEVED', paginatedCountries);
+    successResponse(res, 200, SuccessMessages.METADATA.COUNTRY_RETRIEVED, paginatedCountries);
   } catch (error) {
-    errorResponse(res, 500, 'COUNTRY_RETRIEVED_FAILED', error);
+    errorResponse(res, 500, ErrorMessages.METADATA.COUNTRY_RETRIEVED_FAILED, error);
   }
 };
 
@@ -38,8 +39,8 @@ export const getLanguages = async (req: Request, res: Response): Promise<void> =
       name: translateMessage(l.name, lang)
     }));
 
-    successResponse(res, 200, 'LANGUAGE_RETRIEVED', { languages: localizedLanguages });
+    successResponse(res, 200, SuccessMessages.METADATA.LANGUAGE_RETRIEVED, { languages: localizedLanguages });
   } catch (error) {
-    errorResponse(res, 500, 'LANGUAGE_RETRIEVED_FAILED', error);
+    errorResponse(res, 500, ErrorMessages.METADATA.LANGUAGE_RETRIEVED_FAILED, error);
   }
 };

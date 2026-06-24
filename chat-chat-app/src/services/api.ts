@@ -16,6 +16,30 @@ const getApiUrl = () => {
 
 export const API_BASE_URL = getApiUrl();
 
+let onUnauthorizedCallback: (() => void) | null = null;
+
+export const setOnUnauthorized = (callback: () => void) => {
+  onUnauthorizedCallback = callback;
+};
+
+const g: any = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : {});
+const originalFetch = g.fetch || (typeof fetch !== 'undefined' ? fetch : null);
+if (originalFetch) {
+  const interceptedFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const response = await originalFetch(input, init);
+    if (response.status === 401) {
+      if (onUnauthorizedCallback) {
+        onUnauthorizedCallback();
+      }
+    }
+    return response;
+  };
+
+  if (g.fetch) {
+    g.fetch = interceptedFetch;
+  }
+}
+
 export interface OtpResponse {
   success: boolean;
   message: string;
@@ -419,6 +443,34 @@ export const api = {
   },
 
   /**
+   * Update a status update
+   */
+  async updateStatus(
+    statusId: string,
+    payload: { content: string; type?: 'text' | 'image'; mediaUrl?: string; backgroundColor?: string },
+    token: string
+  ): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/statuses/${statusId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update status update');
+      }
+      return data;
+    } catch (error: any) {
+      console.error('API Error (updateStatus):', error);
+      throw error;
+    }
+  },
+
+  /**
    * Fetch call logs list
    */
   async getCallLogs(token: string): Promise<any> {
@@ -460,6 +512,72 @@ export const api = {
       return data;
     } catch (error: any) {
       console.error('API Error (createCallLog):', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch active login sessions
+   */
+  async getSessions(token: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/sessions`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch sessions');
+      }
+      return data;
+    } catch (error: any) {
+      console.error('API Error (getSessions):', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Revoke a specific session by ID
+   */
+  async revokeSession(sessionId: string, token: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to revoke session');
+      }
+      return data;
+    } catch (error: any) {
+      console.error('API Error (revokeSession):', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Revoke all other sessions except current
+   */
+  async revokeOtherSessions(token: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/sessions/other`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to revoke other sessions');
+      }
+      return data;
+    } catch (error: any) {
+      console.error('API Error (revokeOtherSessions):', error);
       throw error;
     }
   }

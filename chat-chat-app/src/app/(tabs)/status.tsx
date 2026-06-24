@@ -133,6 +133,58 @@ export default function StatusScreen() {
     );
   };
 
+  const handleEditStatus = (status: StatusUpdate) => {
+    Alert.prompt(
+      'Edit Status Update',
+      'Update your status message:',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Save',
+          onPress: async (text?: string) => {
+            if (!text || !text.trim() || !token) return;
+            try {
+              const res = await api.updateStatus(
+                status._id,
+                {
+                  content: text.trim(),
+                  type: 'text',
+                  backgroundColor: status.backgroundColor
+                },
+                token
+              );
+              
+              if (res.status) {
+                Alert.alert('Updated', 'Status update updated successfully!');
+                
+                // Update viewer state in real-time
+                if (viewerGroup) {
+                  const updatedStatuses = viewerGroup.statuses.map(s => 
+                    s._id === status._id ? { ...s, content: text.trim() } : s
+                  );
+                  setViewerGroup({
+                    ...viewerGroup,
+                    statuses: updatedStatuses
+                  });
+                }
+                
+                fetchStatuses();
+              }
+            } catch (err) {
+              console.log('Failed to update status:', err);
+              Alert.alert('Error', 'Failed to update status. Please try again.');
+            }
+          },
+        },
+      ],
+      'plain-text',
+      status.content
+    );
+  };
+
   const handleDeleteStatus = async (statusId: string) => {
     if (!token) return;
     Alert.alert(
@@ -386,15 +438,23 @@ export default function StatusScreen() {
                   </View>
                 </View>
 
-                {/* Top Action Buttons (Delete or Close) */}
+                {/* Top Action Buttons (Edit, Delete or Close) */}
                 <View style={styles.modalActions}>
                   {viewerGroup.isOwn && (
-                    <TouchableOpacity 
-                      onPress={() => handleDeleteStatus(viewerGroup.statuses[activeStatusIndex]._id)}
-                      style={styles.deleteButton}
-                    >
-                      <Ionicons name="trash-outline" size={24} color="#FF5252" />
-                    </TouchableOpacity>
+                    <>
+                      <TouchableOpacity 
+                        onPress={() => handleEditStatus(viewerGroup.statuses[activeStatusIndex])}
+                        style={styles.editButton}
+                      >
+                        <Ionicons name="pencil-outline" size={22} color="#FFF" />
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        onPress={() => handleDeleteStatus(viewerGroup.statuses[activeStatusIndex]._id)}
+                        style={styles.deleteButton}
+                      >
+                        <Ionicons name="trash-outline" size={24} color="#FF5252" />
+                      </TouchableOpacity>
+                    </>
                   )}
                   <TouchableOpacity 
                     onPress={() => {
@@ -635,6 +695,11 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   deleteButton: {
+    padding: 6,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 20,
+  },
+  editButton: {
     padding: 6,
     backgroundColor: 'rgba(0,0,0,0.3)',
     borderRadius: 20,

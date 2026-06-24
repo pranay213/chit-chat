@@ -7,7 +7,7 @@ import { getUserChats, getChatMessages, createGroupChat, updateChatDetails, upda
 import { getUsers } from '../controllers/user.controller';
 import { getMySessionsMobile, revokeSession, revokeOtherSessionsMobile } from '../controllers/session.controller';
 import { getCountries, getLanguages } from '../controllers/metadata.controller';
-import { createStatus, getStatuses, deleteStatus } from '../controllers/status.controller';
+import { createStatus, getStatuses, deleteStatus, updateStatus } from '../controllers/status.controller';
 import { getCallLogs, createCallLog } from '../controllers/callLog.controller';
 import { authenticateUser } from '../middlewares/auth.middleware';
 
@@ -59,6 +59,7 @@ router.delete('/sessions/:id', authenticateUser, revokeSession);
 router.post('/statuses', authenticateUser, createStatus);
 router.get('/statuses', authenticateUser, getStatuses);
 router.delete('/statuses/:statusId', authenticateUser, deleteStatus);
+router.put('/statuses/:statusId', authenticateUser, updateStatus);
 
 // Call History Logs Routes
 router.get('/calls', authenticateUser, getCallLogs);

@@ -70,13 +70,18 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
 export const getMySessionsMobile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user.id;
-    const query = {
-      ...req.query,
-      userId,
-      isActive: true
-    };
-    const paginatedSessions = await executePaginatedQuery(Session, query, [], '-token');
-    successResponse(res, 200, SuccessMessages.SESSION.MY_SESSIONS_RETRIEVED, paginatedSessions);
+    const currentToken = req.header('Authorization')?.replace('Bearer ', '');
+    const sessions = await Session.find({ userId, isActive: true }).sort({ updatedAt: -1 });
+    const mappedSessions = sessions.map(session => {
+      const isCurrent = session.token === currentToken;
+      const sessionObj = session.toObject();
+      delete (sessionObj as any).token;
+      return {
+        ...sessionObj,
+        isCurrent
+      };
+    });
+    successResponse(res, 200, SuccessMessages.SESSION.MY_SESSIONS_RETRIEVED, { docs: mappedSessions });
   } catch (error) {
     logger.error(`Get My Sessions Mobile error: ${error}`);
     errorResponse(res, 500, ErrorMessages.SESSION.RETRIEVED_FAILED, error);

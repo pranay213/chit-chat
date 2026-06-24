@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useRef, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { api } from '../services/api';
+import { api, setOnUnauthorized } from '../services/api';
 import { connectSocket, disconnectSocket } from '../services/socket';
 
 const memoryStorage: Record<string, string> = {};
@@ -148,6 +148,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     bootstrapAsync();
+  }, []);
+
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      console.log('API: Unauthorized/401 response detected. Logging out...');
+      logout();
+    });
   }, []);
 
   const updatePendingRegisterData = (data: { displayName: string; email?: string; mobileNumber?: string; password?: string }) => {

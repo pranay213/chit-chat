@@ -9,7 +9,8 @@ import {
   TextInput, 
   ScrollView, 
   Alert, 
-  ActivityIndicator 
+  ActivityIndicator,
+  FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -32,6 +33,73 @@ export default function SettingsScreen() {
 
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [sessionsModalVisible, setSessionsModalVisible] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [fetchingSessions, setFetchingSessions] = useState(false);
+
+  const fetchSessions = async () => {
+    if (!token) return;
+    setFetchingSessions(true);
+    try {
+      const res = await api.getSessions(token);
+      const sessionData = res.data?.docs || res.data || res.docs || [];
+      setSessions(sessionData);
+    } catch (err) {
+      console.log('Failed to fetch active sessions:', err);
+    } finally {
+      setFetchingSessions(false);
+    }
+  };
+
+  const handleRevokeSession = async (sessionId: string) => {
+    if (!token) return;
+    Alert.alert(
+      'Revoke Session',
+      'Are you sure you want to end this login session? You will be logged out of that device.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Revoke',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.revokeSession(sessionId, token);
+              Alert.alert('Success', 'Session revoked successfully.');
+              fetchSessions();
+            } catch (err: any) {
+              console.log('Failed to revoke session:', err);
+              Alert.alert('Error', err.message || 'Failed to revoke session');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleRevokeOtherSessions = async () => {
+    if (!token) return;
+    Alert.alert(
+      'Revoke All Other Sessions',
+      'Are you sure you want to end all other active sessions? You will remain logged in on this device.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Revoke All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.revokeOtherSessions(token);
+              Alert.alert('Success', 'All other sessions revoked successfully.');
+              fetchSessions();
+            } catch (err: any) {
+              console.log('Failed to revoke other sessions:', err);
+              Alert.alert('Error', err.message || 'Failed to revoke other sessions');
+            }
+          }
+        }
+      ]
+    );
+  };
   const [displayName, setDisplayName] = useState('');
   const [profileImage, setProfileImage] = useState('');
   const [slogan, setSlogan] = useState('');
@@ -249,7 +317,7 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={18} color="#CCC" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/settings' as any)}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => { fetchSessions(); setSessionsModalVisible(true); }}>
             <Ionicons name="phone-portrait-outline" size={22} color="#555" style={styles.menuIcon} />
             <View style={styles.menuTextContainer}>
               <Text style={styles.menuTitle}>Active Sessions</Text>
@@ -517,6 +585,93 @@ export default function SettingsScreen() {
               </View>
             </View>
           </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Active Sessions Modal */}
+      <Modal
+        visible={sessionsModalVisible}
+        animationType="slide"
+        onRequestClose={() => setSessionsModalVisible(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <StatusBar style="dark" />
+          
+          {/* Modal Header */}
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setSessionsModalVisible(false)} style={styles.modalCloseBtn}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Active Sessions</Text>
+            <View style={{ width: 24 }} />
+          </View>
+
+          {/* Revoke All Other Button */}
+          {sessions.filter(s => !s.isCurrent).length > 0 && (
+            <View style={styles.revokeOtherContainer}>
+              <TouchableOpacity 
+                style={styles.revokeOtherButton}
+                onPress={handleRevokeOtherSessions}
+              >
+                <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+                <Text style={styles.revokeOtherText}>Revoke All Other Sessions</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {fetchingSessions ? (
+            <View style={styles.sessionsLoadingContainer}>
+              <ActivityIndicator size="large" color="#7E57C2" style={{ marginBottom: 12 }} />
+              <Text style={styles.sessionsLoadingText}>Loading active sessions...</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={sessions}
+              keyExtractor={item => item._id}
+              contentContainerStyle={styles.sessionsList}
+              renderItem={({ item }) => (
+                <View style={[styles.sessionItem, item.isCurrent && styles.currentSessionItem]}>
+                  <View style={styles.sessionIconWrapper}>
+                    <Ionicons 
+                      name={item.userAgent?.toLowerCase().includes('mobile') || item.userAgent?.toLowerCase().includes('android') || item.userAgent?.toLowerCase().includes('iphone') ? 'phone-portrait-outline' : 'desktop-outline'} 
+                      size={28} 
+                      color={item.isCurrent ? '#7E57C2' : '#666'} 
+                    />
+                  </View>
+                  <View style={styles.sessionDetails}>
+                    <View style={styles.sessionHeaderRow}>
+                      <Text style={[styles.sessionBrowser, item.isCurrent && { fontWeight: 'bold', color: '#7E57C2' }]} numberOfLines={2}>
+                        {item.userAgent || 'Unknown Device'}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                      <Text style={styles.sessionMeta}>IP: {item.ipAddress || 'Unknown'}</Text>
+                      {item.isCurrent && (
+                        <View style={styles.currentBadge}>
+                          <Text style={styles.currentBadgeText}>This Device</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.sessionMeta, { marginTop: 2 }]}>Last active: {new Date(item.updatedAt).toLocaleString()}</Text>
+                  </View>
+                  
+                  {!item.isCurrent && (
+                    <TouchableOpacity 
+                      style={styles.revokeSessionBtn}
+                      onPress={() => handleRevokeSession(item._id)}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+              ListEmptyComponent={() => (
+                <View style={styles.emptySessionsContainer}>
+                  <Text style={styles.emptySessionsText}>No active sessions found.</Text>
+                </View>
+              )}
+            />
+          )}
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -818,5 +973,114 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 4,
     fontWeight: '500',
+  },
+  revokeOtherContainer: {
+    padding: 16,
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  revokeOtherButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF1F0',
+    borderColor: '#FFA39E',
+    borderWidth: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  revokeOtherText: {
+    color: '#FF3B30',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  sessionsLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  sessionsLoadingText: {
+    color: '#666',
+    fontSize: 15,
+    marginTop: 8,
+  },
+  sessionsList: {
+    padding: 16,
+  },
+  sessionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  currentSessionItem: {
+    borderColor: '#E8DFF5',
+    backgroundColor: '#FAF7FD',
+  },
+  sessionIconWrapper: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  sessionDetails: {
+    flex: 1,
+  },
+  sessionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sessionBrowser: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
+  },
+  sessionMeta: {
+    fontSize: 12,
+    color: '#888',
+  },
+  currentBadge: {
+    backgroundColor: '#7E57C2',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  currentBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  revokeSessionBtn: {
+    padding: 8,
+    backgroundColor: '#FFF1F0',
+    borderRadius: 20,
+    marginLeft: 12,
+  },
+  emptySessionsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  emptySessionsText: {
+    color: '#999',
+    fontSize: 15,
   },
 });

@@ -9,6 +9,8 @@ import {
   RefreshControl, 
   ActivityIndicator 
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -48,7 +50,7 @@ export default function CallsScreen() {
     if (!isRefreshing) setLoading(true);
     try {
       const res = await api.getCallLogs(token);
-      setLogs(res.data?.logs || []);
+      setLogs(res.logs || res.data?.logs || []);
     } catch (error) {
       console.error('Failed to fetch call logs:', error);
     } finally {
@@ -119,8 +121,10 @@ export default function CallsScreen() {
   };
 
   const renderLogItem = ({ item }: { item: CallLogItem }) => {
+    if (!item.callerId || !item.receiverId) return null;
     const isOutgoing = item.callerId._id === user?._id;
     const targetContact = isOutgoing ? item.receiverId : item.callerId;
+    if (!targetContact) return null;
     
     // Choose icon and color based on call status
     let statusIcon: any = 'arrow-up-right';
@@ -184,7 +188,8 @@ export default function CallsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Calls</Text>
       </View>
@@ -211,7 +216,18 @@ export default function CallsScreen() {
           </View>
         }
       />
-    </View>
+
+      {/* Floating Action Button for starting a new call */}
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => router.push({
+          pathname: '/new-chat',
+          params: { isCall: 'true' }
+        })}
+      >
+        <Ionicons name="call" size={24} color="#FFF" />
+      </TouchableOpacity>
+    </SafeAreaView>
   );
 }
 
@@ -320,5 +336,21 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#075E54',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 3 },
   },
 });
