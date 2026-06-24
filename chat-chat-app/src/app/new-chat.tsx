@@ -172,11 +172,17 @@ export default function NewChatScreen() {
         matchedUsers = dbUsers.filter((u: any) => u._id !== user?._id);
       }
 
+      // Ensure all matched users have a displayName fallback
+      const finalizedMatchedUsers = matchedUsers.map((u: any) => ({
+        ...u,
+        displayName: u.displayName || u.mobileNumber || u.email || 'Contact'
+      }));
+
       // Prepend selfContact (Me) at the top of the contact list
       if (selfContact) {
-        setContacts([selfContact, ...matchedUsers]);
+        setContacts([selfContact, ...finalizedMatchedUsers]);
       } else {
-        setContacts(matchedUsers);
+        setContacts(finalizedMatchedUsers);
       }
     } catch (err) {
       console.log('Failed to fetch/match contacts:', err);
@@ -191,7 +197,7 @@ export default function NewChatScreen() {
   }, [token]);
 
   const filteredContacts = contacts.filter(c => 
-    c.displayName.toLowerCase().includes(search.toLowerCase())
+    (c.displayName || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const startChat = async (contact: Contact) => {
