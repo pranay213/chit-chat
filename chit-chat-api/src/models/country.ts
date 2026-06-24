@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ICountry extends Document {
   name: string;
   code: string;
+  code3: string;
   dialCode: string;
   flagUrl?: string;
   emoji?: string;
@@ -10,8 +11,9 @@ export interface ICountry extends Document {
 const countrySchema = new Schema<ICountry>(
   {
     name: { type: String, required: true, unique: true },
-    code: { type: String, required: true, unique: true }, // e.g., "IN", "US"
-    dialCode: { type: String, required: true }, // e.g., "+91", "+1"
+    code: { type: String, required: true, unique: true, uppercase: true }, // e.g., "IN"
+    code3: { type: String, required: true, unique: true, uppercase: true }, // e.g., "IND"
+    dialCode: { type: String, required: true }, // e.g., "+91"
     flagUrl: { type: String },
     emoji: { type: String },
     isActive: { type: Boolean, default: true },

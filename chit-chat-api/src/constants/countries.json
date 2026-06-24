@@ -1,26 +1,2243 @@
 [
-  { "name": "India", "code": "IN", "dialCode": "+91", "flagUrl": "https://flagcdn.com/w320/in.png", "emoji": "🇮🇳", "isActive": true },
-  { "name": "United States", "code": "US", "dialCode": "+1", "flagUrl": "https://flagcdn.com/w320/us.png", "emoji": "🇺🇸", "isActive": true },
-  { "name": "United Kingdom", "code": "GB", "dialCode": "+44", "flagUrl": "https://flagcdn.com/w320/gb.png", "emoji": "🇬🇧", "isActive": true },
-  { "name": "Canada", "code": "CA", "dialCode": "+1", "flagUrl": "https://flagcdn.com/w320/ca.png", "emoji": "🇨🇦", "isActive": true },
-  { "name": "Australia", "code": "AU", "dialCode": "+61", "flagUrl": "https://flagcdn.com/w320/au.png", "emoji": "🇦🇺", "isActive": true },
-  { "name": "Germany", "code": "DE", "dialCode": "+49", "flagUrl": "https://flagcdn.com/w320/de.png", "emoji": "🇩🇪", "isActive": true },
-  { "name": "France", "code": "FR", "dialCode": "+33", "flagUrl": "https://flagcdn.com/w320/fr.png", "emoji": "🇫🇷", "isActive": true },
-  { "name": "Spain", "code": "ES", "dialCode": "+34", "flagUrl": "https://flagcdn.com/w320/es.png", "emoji": "🇪🇸", "isActive": true },
-  { "name": "Italy", "code": "IT", "dialCode": "+39", "flagUrl": "https://flagcdn.com/w320/it.png", "emoji": "🇮🇹", "isActive": true },
-  { "name": "Japan", "code": "JP", "dialCode": "+81", "flagUrl": "https://flagcdn.com/w320/jp.png", "emoji": "🇯🇵", "isActive": true },
-  { "name": "China", "code": "CN", "dialCode": "+86", "flagUrl": "https://flagcdn.com/w320/cn.png", "emoji": "🇨🇳", "isActive": true },
-  { "name": "Brazil", "code": "BR", "dialCode": "+55", "flagUrl": "https://flagcdn.com/w320/br.png", "emoji": "🇧🇷", "isActive": true },
-  { "name": "Mexico", "code": "MX", "dialCode": "+52", "flagUrl": "https://flagcdn.com/w320/mx.png", "emoji": "🇲🇽", "isActive": true },
-  { "name": "South Africa", "code": "ZA", "dialCode": "+27", "flagUrl": "https://flagcdn.com/w320/za.png", "emoji": "🇿🇦", "isActive": true },
-  { "name": "Russia", "code": "RU", "dialCode": "+7", "flagUrl": "https://flagcdn.com/w320/ru.png", "emoji": "🇷🇺", "isActive": true },
-  { "name": "Singapore", "code": "SG", "dialCode": "+65", "flagUrl": "https://flagcdn.com/w320/sg.png", "emoji": "🇸🇬", "isActive": true },
-  { "name": "United Arab Emirates", "code": "AE", "dialCode": "+971", "flagUrl": "https://flagcdn.com/w320/ae.png", "emoji": "🇦🇪", "isActive": true },
-  { "name": "Saudi Arabia", "code": "SA", "dialCode": "+966", "flagUrl": "https://flagcdn.com/w320/sa.png", "emoji": "🇸🇦", "isActive": true },
-  { "name": "Netherlands", "code": "NL", "dialCode": "+31", "flagUrl": "https://flagcdn.com/w320/nl.png", "emoji": "🇳🇱", "isActive": true },
-  { "name": "Switzerland", "code": "CH", "dialCode": "+41", "flagUrl": "https://flagcdn.com/w320/ch.png", "emoji": "🇨🇭", "isActive": true },
-  { "name": "Sweden", "code": "SE", "dialCode": "+46", "flagUrl": "https://flagcdn.com/w320/se.png", "emoji": "🇸🇪", "isActive": true },
-  { "name": "Norway", "code": "NO", "dialCode": "+47", "flagUrl": "https://flagcdn.com/w320/no.png", "emoji": "🇳🇴", "isActive": true },
-  { "name": "New Zealand", "code": "NZ", "dialCode": "+64", "flagUrl": "https://flagcdn.com/w320/nz.png", "emoji": "🇳🇿", "isActive": true },
-  { "name": "South Korea", "code": "KR", "dialCode": "+82", "flagUrl": "https://flagcdn.com/w320/kr.png", "emoji": "🇰🇷", "isActive": true }
+  {
+    "name": "Afghanistan",
+    "code": "AF",
+    "code3": "AFG",
+    "dialCode": "+93",
+    "flagUrl": "https://flagcdn.com/w320/af.png",
+    "emoji": "🇦🇫",
+    "isActive": true
+  },
+  {
+    "name": "Albania",
+    "code": "AL",
+    "code3": "ALB",
+    "dialCode": "+355",
+    "flagUrl": "https://flagcdn.com/w320/al.png",
+    "emoji": "🇦🇱",
+    "isActive": true
+  },
+  {
+    "name": "Algeria",
+    "code": "DZ",
+    "code3": "DZA",
+    "dialCode": "+213",
+    "flagUrl": "https://flagcdn.com/w320/dz.png",
+    "emoji": "🇩🇿",
+    "isActive": true
+  },
+  {
+    "name": "American Samoa",
+    "code": "AS",
+    "code3": "ASM",
+    "dialCode": "+1684",
+    "flagUrl": "https://flagcdn.com/w320/as.png",
+    "emoji": "🇦🇸",
+    "isActive": true
+  },
+  {
+    "name": "Andorra",
+    "code": "AD",
+    "code3": "AND",
+    "dialCode": "+376",
+    "flagUrl": "https://flagcdn.com/w320/ad.png",
+    "emoji": "🇦🇩",
+    "isActive": true
+  },
+  {
+    "name": "Angola",
+    "code": "AO",
+    "code3": "AGO",
+    "dialCode": "+244",
+    "flagUrl": "https://flagcdn.com/w320/ao.png",
+    "emoji": "🇦🇴",
+    "isActive": true
+  },
+  {
+    "name": "Anguilla",
+    "code": "AI",
+    "code3": "AIA",
+    "dialCode": "+1264",
+    "flagUrl": "https://flagcdn.com/w320/ai.png",
+    "emoji": "🇦🇮",
+    "isActive": true
+  },
+  {
+    "name": "Antarctica",
+    "code": "AQ",
+    "code3": "ATA",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/aq.png",
+    "emoji": "🇦🇶",
+    "isActive": true
+  },
+  {
+    "name": "Antigua and Barbuda",
+    "code": "AG",
+    "code3": "ATG",
+    "dialCode": "+1268",
+    "flagUrl": "https://flagcdn.com/w320/ag.png",
+    "emoji": "🇦🇬",
+    "isActive": true
+  },
+  {
+    "name": "Argentina",
+    "code": "AR",
+    "code3": "ARG",
+    "dialCode": "+54",
+    "flagUrl": "https://flagcdn.com/w320/ar.png",
+    "emoji": "🇦🇷",
+    "isActive": true
+  },
+  {
+    "name": "Armenia",
+    "code": "AM",
+    "code3": "ARM",
+    "dialCode": "+374",
+    "flagUrl": "https://flagcdn.com/w320/am.png",
+    "emoji": "🇦🇲",
+    "isActive": true
+  },
+  {
+    "name": "Aruba",
+    "code": "AW",
+    "code3": "ABW",
+    "dialCode": "+297",
+    "flagUrl": "https://flagcdn.com/w320/aw.png",
+    "emoji": "🇦🇼",
+    "isActive": true
+  },
+  {
+    "name": "Australia",
+    "code": "AU",
+    "code3": "AUS",
+    "dialCode": "+61",
+    "flagUrl": "https://flagcdn.com/w320/au.png",
+    "emoji": "🇦🇺",
+    "isActive": true
+  },
+  {
+    "name": "Austria",
+    "code": "AT",
+    "code3": "AUT",
+    "dialCode": "+43",
+    "flagUrl": "https://flagcdn.com/w320/at.png",
+    "emoji": "🇦🇹",
+    "isActive": true
+  },
+  {
+    "name": "Azerbaijan",
+    "code": "AZ",
+    "code3": "AZE",
+    "dialCode": "+994",
+    "flagUrl": "https://flagcdn.com/w320/az.png",
+    "emoji": "🇦🇿",
+    "isActive": true
+  },
+  {
+    "name": "Bahamas",
+    "code": "BS",
+    "code3": "BHS",
+    "dialCode": "+1242",
+    "flagUrl": "https://flagcdn.com/w320/bs.png",
+    "emoji": "🇧🇸",
+    "isActive": true
+  },
+  {
+    "name": "Bahrain",
+    "code": "BH",
+    "code3": "BHR",
+    "dialCode": "+973",
+    "flagUrl": "https://flagcdn.com/w320/bh.png",
+    "emoji": "🇧🇭",
+    "isActive": true
+  },
+  {
+    "name": "Bangladesh",
+    "code": "BD",
+    "code3": "BGD",
+    "dialCode": "+880",
+    "flagUrl": "https://flagcdn.com/w320/bd.png",
+    "emoji": "🇧🇩",
+    "isActive": true
+  },
+  {
+    "name": "Barbados",
+    "code": "BB",
+    "code3": "BRB",
+    "dialCode": "+1246",
+    "flagUrl": "https://flagcdn.com/w320/bb.png",
+    "emoji": "🇧🇧",
+    "isActive": true
+  },
+  {
+    "name": "Belarus",
+    "code": "BY",
+    "code3": "BLR",
+    "dialCode": "+375",
+    "flagUrl": "https://flagcdn.com/w320/by.png",
+    "emoji": "🇧🇾",
+    "isActive": true
+  },
+  {
+    "name": "Belgium",
+    "code": "BE",
+    "code3": "BEL",
+    "dialCode": "+32",
+    "flagUrl": "https://flagcdn.com/w320/be.png",
+    "emoji": "🇧🇪",
+    "isActive": true
+  },
+  {
+    "name": "Belize",
+    "code": "BZ",
+    "code3": "BLZ",
+    "dialCode": "+501",
+    "flagUrl": "https://flagcdn.com/w320/bz.png",
+    "emoji": "🇧🇿",
+    "isActive": true
+  },
+  {
+    "name": "Benin",
+    "code": "BJ",
+    "code3": "BEN",
+    "dialCode": "+229",
+    "flagUrl": "https://flagcdn.com/w320/bj.png",
+    "emoji": "🇧🇯",
+    "isActive": true
+  },
+  {
+    "name": "Bermuda",
+    "code": "BM",
+    "code3": "BMU",
+    "dialCode": "+1441",
+    "flagUrl": "https://flagcdn.com/w320/bm.png",
+    "emoji": "🇧🇲",
+    "isActive": true
+  },
+  {
+    "name": "Bhutan",
+    "code": "BT",
+    "code3": "BTN",
+    "dialCode": "+975",
+    "flagUrl": "https://flagcdn.com/w320/bt.png",
+    "emoji": "🇧🇹",
+    "isActive": true
+  },
+  {
+    "name": "Bolivia",
+    "code": "BO",
+    "code3": "BOL",
+    "dialCode": "+591",
+    "flagUrl": "https://flagcdn.com/w320/bo.png",
+    "emoji": "🇧🇴",
+    "isActive": true
+  },
+  {
+    "name": "Bonaire, Sint Eustatius and Saba",
+    "code": "BQ",
+    "code3": "BES",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/bq.png",
+    "emoji": "🇧🇶",
+    "isActive": true
+  },
+  {
+    "name": "Bosnia and Herzegovina",
+    "code": "BA",
+    "code3": "BIH",
+    "dialCode": "+387",
+    "flagUrl": "https://flagcdn.com/w320/ba.png",
+    "emoji": "🇧🇦",
+    "isActive": true
+  },
+  {
+    "name": "Botswana",
+    "code": "BW",
+    "code3": "BWA",
+    "dialCode": "+267",
+    "flagUrl": "https://flagcdn.com/w320/bw.png",
+    "emoji": "🇧🇼",
+    "isActive": true
+  },
+  {
+    "name": "Bouvet Island",
+    "code": "BV",
+    "code3": "BVT",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/bv.png",
+    "emoji": "🇧🇻",
+    "isActive": true
+  },
+  {
+    "name": "Brazil",
+    "code": "BR",
+    "code3": "BRA",
+    "dialCode": "+55",
+    "flagUrl": "https://flagcdn.com/w320/br.png",
+    "emoji": "🇧🇷",
+    "isActive": true
+  },
+  {
+    "name": "British Indian Ocean Territory",
+    "code": "IO",
+    "code3": "IOT",
+    "dialCode": "+246",
+    "flagUrl": "https://flagcdn.com/w320/io.png",
+    "emoji": "🇮🇴",
+    "isActive": true
+  },
+  {
+    "name": "Brunei Darussalam",
+    "code": "BN",
+    "code3": "BRN",
+    "dialCode": "+673",
+    "flagUrl": "https://flagcdn.com/w320/bn.png",
+    "emoji": "🇧🇳",
+    "isActive": true
+  },
+  {
+    "name": "Bulgaria",
+    "code": "BG",
+    "code3": "BGR",
+    "dialCode": "+359",
+    "flagUrl": "https://flagcdn.com/w320/bg.png",
+    "emoji": "🇧🇬",
+    "isActive": true
+  },
+  {
+    "name": "Burkina Faso",
+    "code": "BF",
+    "code3": "BFA",
+    "dialCode": "+226",
+    "flagUrl": "https://flagcdn.com/w320/bf.png",
+    "emoji": "🇧🇫",
+    "isActive": true
+  },
+  {
+    "name": "Burundi",
+    "code": "BI",
+    "code3": "BDI",
+    "dialCode": "+257",
+    "flagUrl": "https://flagcdn.com/w320/bi.png",
+    "emoji": "🇧🇮",
+    "isActive": true
+  },
+  {
+    "name": "Cambodia",
+    "code": "KH",
+    "code3": "KHM",
+    "dialCode": "+855",
+    "flagUrl": "https://flagcdn.com/w320/kh.png",
+    "emoji": "🇰🇭",
+    "isActive": true
+  },
+  {
+    "name": "Cameroon",
+    "code": "CM",
+    "code3": "CMR",
+    "dialCode": "+237",
+    "flagUrl": "https://flagcdn.com/w320/cm.png",
+    "emoji": "🇨🇲",
+    "isActive": true
+  },
+  {
+    "name": "Canada",
+    "code": "CA",
+    "code3": "CAN",
+    "dialCode": "+1",
+    "flagUrl": "https://flagcdn.com/w320/ca.png",
+    "emoji": "🇨🇦",
+    "isActive": true
+  },
+  {
+    "name": "Cape Verde",
+    "code": "CV",
+    "code3": "CPV",
+    "dialCode": "+238",
+    "flagUrl": "https://flagcdn.com/w320/cv.png",
+    "emoji": "🇨🇻",
+    "isActive": true
+  },
+  {
+    "name": "Cayman Islands",
+    "code": "KY",
+    "code3": "CYM",
+    "dialCode": "+345",
+    "flagUrl": "https://flagcdn.com/w320/ky.png",
+    "emoji": "🇰🇾",
+    "isActive": true
+  },
+  {
+    "name": "Central African Republic",
+    "code": "CF",
+    "code3": "CAF",
+    "dialCode": "+236",
+    "flagUrl": "https://flagcdn.com/w320/cf.png",
+    "emoji": "🇨🇫",
+    "isActive": true
+  },
+  {
+    "name": "Chad",
+    "code": "TD",
+    "code3": "TCD",
+    "dialCode": "+235",
+    "flagUrl": "https://flagcdn.com/w320/td.png",
+    "emoji": "🇹🇩",
+    "isActive": true
+  },
+  {
+    "name": "Chile",
+    "code": "CL",
+    "code3": "CHL",
+    "dialCode": "+56",
+    "flagUrl": "https://flagcdn.com/w320/cl.png",
+    "emoji": "🇨🇱",
+    "isActive": true
+  },
+  {
+    "name": "China",
+    "code": "CN",
+    "code3": "CHN",
+    "dialCode": "+86",
+    "flagUrl": "https://flagcdn.com/w320/cn.png",
+    "emoji": "🇨🇳",
+    "isActive": true
+  },
+  {
+    "name": "Christmas Island",
+    "code": "CX",
+    "code3": "CXR",
+    "dialCode": "+61",
+    "flagUrl": "https://flagcdn.com/w320/cx.png",
+    "emoji": "🇨🇽",
+    "isActive": true
+  },
+  {
+    "name": "Cocos (Keeling) Islands",
+    "code": "CC",
+    "code3": "CCK",
+    "dialCode": "+61",
+    "flagUrl": "https://flagcdn.com/w320/cc.png",
+    "emoji": "🇨🇨",
+    "isActive": true
+  },
+  {
+    "name": "Colombia",
+    "code": "CO",
+    "code3": "COL",
+    "dialCode": "+57",
+    "flagUrl": "https://flagcdn.com/w320/co.png",
+    "emoji": "🇨🇴",
+    "isActive": true
+  },
+  {
+    "name": "Comoros",
+    "code": "KM",
+    "code3": "COM",
+    "dialCode": "+269",
+    "flagUrl": "https://flagcdn.com/w320/km.png",
+    "emoji": "🇰🇲",
+    "isActive": true
+  },
+  {
+    "name": "Congo",
+    "code": "CD",
+    "code3": "COD",
+    "dialCode": "+243",
+    "flagUrl": "https://flagcdn.com/w320/cd.png",
+    "emoji": "🇨🇩",
+    "isActive": true
+  },
+  {
+    "name": "Congo",
+    "code": "CG",
+    "code3": "COG",
+    "dialCode": "+242",
+    "flagUrl": "https://flagcdn.com/w320/cg.png",
+    "emoji": "🇨🇬",
+    "isActive": true
+  },
+  {
+    "name": "Cook Islands",
+    "code": "CK",
+    "code3": "COK",
+    "dialCode": "+682",
+    "flagUrl": "https://flagcdn.com/w320/ck.png",
+    "emoji": "🇨🇰",
+    "isActive": true
+  },
+  {
+    "name": "Costa Rica",
+    "code": "CR",
+    "code3": "CRI",
+    "dialCode": "+506",
+    "flagUrl": "https://flagcdn.com/w320/cr.png",
+    "emoji": "🇨🇷",
+    "isActive": true
+  },
+  {
+    "name": "Croatia",
+    "code": "HR",
+    "code3": "HRV",
+    "dialCode": "+385",
+    "flagUrl": "https://flagcdn.com/w320/hr.png",
+    "emoji": "🇭🇷",
+    "isActive": true
+  },
+  {
+    "name": "Cuba",
+    "code": "CU",
+    "code3": "CUB",
+    "dialCode": "+53",
+    "flagUrl": "https://flagcdn.com/w320/cu.png",
+    "emoji": "🇨🇺",
+    "isActive": true
+  },
+  {
+    "name": "Curaçao",
+    "code": "CW",
+    "code3": "CUW",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/cw.png",
+    "emoji": "🇨🇼",
+    "isActive": true
+  },
+  {
+    "name": "Cyprus",
+    "code": "CY",
+    "code3": "CYP",
+    "dialCode": "+537",
+    "flagUrl": "https://flagcdn.com/w320/cy.png",
+    "emoji": "🇨🇾",
+    "isActive": true
+  },
+  {
+    "name": "Czech Republic",
+    "code": "CZ",
+    "code3": "CZE",
+    "dialCode": "+420",
+    "flagUrl": "https://flagcdn.com/w320/cz.png",
+    "emoji": "🇨🇿",
+    "isActive": true
+  },
+  {
+    "name": "Côte D'Ivoire",
+    "code": "CI",
+    "code3": "CIV",
+    "dialCode": "+225",
+    "flagUrl": "https://flagcdn.com/w320/ci.png",
+    "emoji": "🇨🇮",
+    "isActive": true
+  },
+  {
+    "name": "Denmark",
+    "code": "DK",
+    "code3": "DNK",
+    "dialCode": "+45",
+    "flagUrl": "https://flagcdn.com/w320/dk.png",
+    "emoji": "🇩🇰",
+    "isActive": true
+  },
+  {
+    "name": "Djibouti",
+    "code": "DJ",
+    "code3": "DJI",
+    "dialCode": "+253",
+    "flagUrl": "https://flagcdn.com/w320/dj.png",
+    "emoji": "🇩🇯",
+    "isActive": true
+  },
+  {
+    "name": "Dominica",
+    "code": "DM",
+    "code3": "DMA",
+    "dialCode": "+1767",
+    "flagUrl": "https://flagcdn.com/w320/dm.png",
+    "emoji": "🇩🇲",
+    "isActive": true
+  },
+  {
+    "name": "Dominican Republic",
+    "code": "DO",
+    "code3": "DOM",
+    "dialCode": "+1849",
+    "flagUrl": "https://flagcdn.com/w320/do.png",
+    "emoji": "🇩🇴",
+    "isActive": true
+  },
+  {
+    "name": "Ecuador",
+    "code": "EC",
+    "code3": "ECU",
+    "dialCode": "+593",
+    "flagUrl": "https://flagcdn.com/w320/ec.png",
+    "emoji": "🇪🇨",
+    "isActive": true
+  },
+  {
+    "name": "Egypt",
+    "code": "EG",
+    "code3": "EGY",
+    "dialCode": "+20",
+    "flagUrl": "https://flagcdn.com/w320/eg.png",
+    "emoji": "🇪🇬",
+    "isActive": true
+  },
+  {
+    "name": "El Salvador",
+    "code": "SV",
+    "code3": "SLV",
+    "dialCode": "+503",
+    "flagUrl": "https://flagcdn.com/w320/sv.png",
+    "emoji": "🇸🇻",
+    "isActive": true
+  },
+  {
+    "name": "Equatorial Guinea",
+    "code": "GQ",
+    "code3": "GNQ",
+    "dialCode": "+240",
+    "flagUrl": "https://flagcdn.com/w320/gq.png",
+    "emoji": "🇬🇶",
+    "isActive": true
+  },
+  {
+    "name": "Eritrea",
+    "code": "ER",
+    "code3": "ERI",
+    "dialCode": "+291",
+    "flagUrl": "https://flagcdn.com/w320/er.png",
+    "emoji": "🇪🇷",
+    "isActive": true
+  },
+  {
+    "name": "Estonia",
+    "code": "EE",
+    "code3": "EST",
+    "dialCode": "+372",
+    "flagUrl": "https://flagcdn.com/w320/ee.png",
+    "emoji": "🇪🇪",
+    "isActive": true
+  },
+  {
+    "name": "Ethiopia",
+    "code": "ET",
+    "code3": "ETH",
+    "dialCode": "+251",
+    "flagUrl": "https://flagcdn.com/w320/et.png",
+    "emoji": "🇪🇹",
+    "isActive": true
+  },
+  {
+    "name": "Falkland Islands (Malvinas)",
+    "code": "FK",
+    "code3": "FLK",
+    "dialCode": "+500",
+    "flagUrl": "https://flagcdn.com/w320/fk.png",
+    "emoji": "🇫🇰",
+    "isActive": true
+  },
+  {
+    "name": "Faroe Islands",
+    "code": "FO",
+    "code3": "FRO",
+    "dialCode": "+298",
+    "flagUrl": "https://flagcdn.com/w320/fo.png",
+    "emoji": "🇫🇴",
+    "isActive": true
+  },
+  {
+    "name": "Fiji",
+    "code": "FJ",
+    "code3": "FJI",
+    "dialCode": "+679",
+    "flagUrl": "https://flagcdn.com/w320/fj.png",
+    "emoji": "🇫🇯",
+    "isActive": true
+  },
+  {
+    "name": "Finland",
+    "code": "FI",
+    "code3": "FIN",
+    "dialCode": "+358",
+    "flagUrl": "https://flagcdn.com/w320/fi.png",
+    "emoji": "🇫🇮",
+    "isActive": true
+  },
+  {
+    "name": "France",
+    "code": "FR",
+    "code3": "FRA",
+    "dialCode": "+33",
+    "flagUrl": "https://flagcdn.com/w320/fr.png",
+    "emoji": "🇫🇷",
+    "isActive": true
+  },
+  {
+    "name": "French Guiana",
+    "code": "GF",
+    "code3": "GUF",
+    "dialCode": "+594",
+    "flagUrl": "https://flagcdn.com/w320/gf.png",
+    "emoji": "🇬🇫",
+    "isActive": true
+  },
+  {
+    "name": "French Polynesia",
+    "code": "PF",
+    "code3": "PYF",
+    "dialCode": "+689",
+    "flagUrl": "https://flagcdn.com/w320/pf.png",
+    "emoji": "🇵🇫",
+    "isActive": true
+  },
+  {
+    "name": "French Southern Territories",
+    "code": "TF",
+    "code3": "ATF",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/tf.png",
+    "emoji": "🇹🇫",
+    "isActive": true
+  },
+  {
+    "name": "Gabon",
+    "code": "GA",
+    "code3": "GAB",
+    "dialCode": "+241",
+    "flagUrl": "https://flagcdn.com/w320/ga.png",
+    "emoji": "🇬🇦",
+    "isActive": true
+  },
+  {
+    "name": "Gambia",
+    "code": "GM",
+    "code3": "GMB",
+    "dialCode": "+220",
+    "flagUrl": "https://flagcdn.com/w320/gm.png",
+    "emoji": "🇬🇲",
+    "isActive": true
+  },
+  {
+    "name": "Georgia",
+    "code": "GE",
+    "code3": "GEO",
+    "dialCode": "+995",
+    "flagUrl": "https://flagcdn.com/w320/ge.png",
+    "emoji": "🇬🇪",
+    "isActive": true
+  },
+  {
+    "name": "Germany",
+    "code": "DE",
+    "code3": "DEU",
+    "dialCode": "+49",
+    "flagUrl": "https://flagcdn.com/w320/de.png",
+    "emoji": "🇩🇪",
+    "isActive": true
+  },
+  {
+    "name": "Ghana",
+    "code": "GH",
+    "code3": "GHA",
+    "dialCode": "+233",
+    "flagUrl": "https://flagcdn.com/w320/gh.png",
+    "emoji": "🇬🇭",
+    "isActive": true
+  },
+  {
+    "name": "Gibraltar",
+    "code": "GI",
+    "code3": "GIB",
+    "dialCode": "+350",
+    "flagUrl": "https://flagcdn.com/w320/gi.png",
+    "emoji": "🇬🇮",
+    "isActive": true
+  },
+  {
+    "name": "Greece",
+    "code": "GR",
+    "code3": "GRC",
+    "dialCode": "+30",
+    "flagUrl": "https://flagcdn.com/w320/gr.png",
+    "emoji": "🇬🇷",
+    "isActive": true
+  },
+  {
+    "name": "Greenland",
+    "code": "GL",
+    "code3": "GRL",
+    "dialCode": "+299",
+    "flagUrl": "https://flagcdn.com/w320/gl.png",
+    "emoji": "🇬🇱",
+    "isActive": true
+  },
+  {
+    "name": "Grenada",
+    "code": "GD",
+    "code3": "GRD",
+    "dialCode": "+1473",
+    "flagUrl": "https://flagcdn.com/w320/gd.png",
+    "emoji": "🇬🇩",
+    "isActive": true
+  },
+  {
+    "name": "Guadeloupe",
+    "code": "GP",
+    "code3": "GLP",
+    "dialCode": "+590",
+    "flagUrl": "https://flagcdn.com/w320/gp.png",
+    "emoji": "🇬🇵",
+    "isActive": true
+  },
+  {
+    "name": "Guam",
+    "code": "GU",
+    "code3": "GUM",
+    "dialCode": "+1671",
+    "flagUrl": "https://flagcdn.com/w320/gu.png",
+    "emoji": "🇬🇺",
+    "isActive": true
+  },
+  {
+    "name": "Guatemala",
+    "code": "GT",
+    "code3": "GTM",
+    "dialCode": "+502",
+    "flagUrl": "https://flagcdn.com/w320/gt.png",
+    "emoji": "🇬🇹",
+    "isActive": true
+  },
+  {
+    "name": "Guernsey",
+    "code": "GG",
+    "code3": "GGY",
+    "dialCode": "+44",
+    "flagUrl": "https://flagcdn.com/w320/gg.png",
+    "emoji": "🇬🇬",
+    "isActive": true
+  },
+  {
+    "name": "Guinea",
+    "code": "GN",
+    "code3": "GIN",
+    "dialCode": "+224",
+    "flagUrl": "https://flagcdn.com/w320/gn.png",
+    "emoji": "🇬🇳",
+    "isActive": true
+  },
+  {
+    "name": "Guinea-Bissau",
+    "code": "GW",
+    "code3": "GNB",
+    "dialCode": "+245",
+    "flagUrl": "https://flagcdn.com/w320/gw.png",
+    "emoji": "🇬🇼",
+    "isActive": true
+  },
+  {
+    "name": "Guyana",
+    "code": "GY",
+    "code3": "GUY",
+    "dialCode": "+595",
+    "flagUrl": "https://flagcdn.com/w320/gy.png",
+    "emoji": "🇬🇾",
+    "isActive": true
+  },
+  {
+    "name": "Haiti",
+    "code": "HT",
+    "code3": "HTI",
+    "dialCode": "+509",
+    "flagUrl": "https://flagcdn.com/w320/ht.png",
+    "emoji": "🇭🇹",
+    "isActive": true
+  },
+  {
+    "name": "Heard Island and Mcdonald Islands",
+    "code": "HM",
+    "code3": "HMD",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/hm.png",
+    "emoji": "🇭🇲",
+    "isActive": true
+  },
+  {
+    "name": "Honduras",
+    "code": "HN",
+    "code3": "HND",
+    "dialCode": "+504",
+    "flagUrl": "https://flagcdn.com/w320/hn.png",
+    "emoji": "🇭🇳",
+    "isActive": true
+  },
+  {
+    "name": "Hong Kong",
+    "code": "HK",
+    "code3": "HKG",
+    "dialCode": "+852",
+    "flagUrl": "https://flagcdn.com/w320/hk.png",
+    "emoji": "🇭🇰",
+    "isActive": true
+  },
+  {
+    "name": "Hungary",
+    "code": "HU",
+    "code3": "HUN",
+    "dialCode": "+36",
+    "flagUrl": "https://flagcdn.com/w320/hu.png",
+    "emoji": "🇭🇺",
+    "isActive": true
+  },
+  {
+    "name": "Iceland",
+    "code": "IS",
+    "code3": "ISL",
+    "dialCode": "+354",
+    "flagUrl": "https://flagcdn.com/w320/is.png",
+    "emoji": "🇮🇸",
+    "isActive": true
+  },
+  {
+    "name": "India",
+    "code": "IN",
+    "code3": "IND",
+    "dialCode": "+91",
+    "flagUrl": "https://flagcdn.com/w320/in.png",
+    "emoji": "🇮🇳",
+    "isActive": true
+  },
+  {
+    "name": "Indonesia",
+    "code": "ID",
+    "code3": "IDN",
+    "dialCode": "+62",
+    "flagUrl": "https://flagcdn.com/w320/id.png",
+    "emoji": "🇮🇩",
+    "isActive": true
+  },
+  {
+    "name": "Iran",
+    "code": "IR",
+    "code3": "IRN",
+    "dialCode": "+98",
+    "flagUrl": "https://flagcdn.com/w320/ir.png",
+    "emoji": "🇮🇷",
+    "isActive": true
+  },
+  {
+    "name": "Iraq",
+    "code": "IQ",
+    "code3": "IRQ",
+    "dialCode": "+964",
+    "flagUrl": "https://flagcdn.com/w320/iq.png",
+    "emoji": "🇮🇶",
+    "isActive": true
+  },
+  {
+    "name": "Ireland",
+    "code": "IE",
+    "code3": "IRL",
+    "dialCode": "+353",
+    "flagUrl": "https://flagcdn.com/w320/ie.png",
+    "emoji": "🇮🇪",
+    "isActive": true
+  },
+  {
+    "name": "Isle of Man",
+    "code": "IM",
+    "code3": "IMN",
+    "dialCode": "+44",
+    "flagUrl": "https://flagcdn.com/w320/im.png",
+    "emoji": "🇮🇲",
+    "isActive": true
+  },
+  {
+    "name": "Israel",
+    "code": "IL",
+    "code3": "ISR",
+    "dialCode": "+972",
+    "flagUrl": "https://flagcdn.com/w320/il.png",
+    "emoji": "🇮🇱",
+    "isActive": true
+  },
+  {
+    "name": "Italy",
+    "code": "IT",
+    "code3": "ITA",
+    "dialCode": "+39",
+    "flagUrl": "https://flagcdn.com/w320/it.png",
+    "emoji": "🇮🇹",
+    "isActive": true
+  },
+  {
+    "name": "Jamaica",
+    "code": "JM",
+    "code3": "JAM",
+    "dialCode": "+1876",
+    "flagUrl": "https://flagcdn.com/w320/jm.png",
+    "emoji": "🇯🇲",
+    "isActive": true
+  },
+  {
+    "name": "Japan",
+    "code": "JP",
+    "code3": "JPN",
+    "dialCode": "+81",
+    "flagUrl": "https://flagcdn.com/w320/jp.png",
+    "emoji": "🇯🇵",
+    "isActive": true
+  },
+  {
+    "name": "Jersey",
+    "code": "JE",
+    "code3": "JEY",
+    "dialCode": "+44",
+    "flagUrl": "https://flagcdn.com/w320/je.png",
+    "emoji": "🇯🇪",
+    "isActive": true
+  },
+  {
+    "name": "Jordan",
+    "code": "JO",
+    "code3": "JOR",
+    "dialCode": "+962",
+    "flagUrl": "https://flagcdn.com/w320/jo.png",
+    "emoji": "🇯🇴",
+    "isActive": true
+  },
+  {
+    "name": "Kazakhstan",
+    "code": "KZ",
+    "code3": "KAZ",
+    "dialCode": "+77",
+    "flagUrl": "https://flagcdn.com/w320/kz.png",
+    "emoji": "🇰🇿",
+    "isActive": true
+  },
+  {
+    "name": "Kenya",
+    "code": "KE",
+    "code3": "KEN",
+    "dialCode": "+254",
+    "flagUrl": "https://flagcdn.com/w320/ke.png",
+    "emoji": "🇰🇪",
+    "isActive": true
+  },
+  {
+    "name": "Kiribati",
+    "code": "KI",
+    "code3": "KIR",
+    "dialCode": "+686",
+    "flagUrl": "https://flagcdn.com/w320/ki.png",
+    "emoji": "🇰🇮",
+    "isActive": true
+  },
+  {
+    "name": "Kuwait",
+    "code": "KW",
+    "code3": "KWT",
+    "dialCode": "+965",
+    "flagUrl": "https://flagcdn.com/w320/kw.png",
+    "emoji": "🇰🇼",
+    "isActive": true
+  },
+  {
+    "name": "Kyrgyzstan",
+    "code": "KG",
+    "code3": "KGZ",
+    "dialCode": "+996",
+    "flagUrl": "https://flagcdn.com/w320/kg.png",
+    "emoji": "🇰🇬",
+    "isActive": true
+  },
+  {
+    "name": "Lao People's Democratic Republic",
+    "code": "LA",
+    "code3": "LAO",
+    "dialCode": "+856",
+    "flagUrl": "https://flagcdn.com/w320/la.png",
+    "emoji": "🇱🇦",
+    "isActive": true
+  },
+  {
+    "name": "Latvia",
+    "code": "LV",
+    "code3": "LVA",
+    "dialCode": "+371",
+    "flagUrl": "https://flagcdn.com/w320/lv.png",
+    "emoji": "🇱🇻",
+    "isActive": true
+  },
+  {
+    "name": "Lebanon",
+    "code": "LB",
+    "code3": "LBN",
+    "dialCode": "+961",
+    "flagUrl": "https://flagcdn.com/w320/lb.png",
+    "emoji": "🇱🇧",
+    "isActive": true
+  },
+  {
+    "name": "Lesotho",
+    "code": "LS",
+    "code3": "LSO",
+    "dialCode": "+266",
+    "flagUrl": "https://flagcdn.com/w320/ls.png",
+    "emoji": "🇱🇸",
+    "isActive": true
+  },
+  {
+    "name": "Liberia",
+    "code": "LR",
+    "code3": "LBR",
+    "dialCode": "+231",
+    "flagUrl": "https://flagcdn.com/w320/lr.png",
+    "emoji": "🇱🇷",
+    "isActive": true
+  },
+  {
+    "name": "Libya",
+    "code": "LY",
+    "code3": "LBY",
+    "dialCode": "+218",
+    "flagUrl": "https://flagcdn.com/w320/ly.png",
+    "emoji": "🇱🇾",
+    "isActive": true
+  },
+  {
+    "name": "Liechtenstein",
+    "code": "LI",
+    "code3": "LIE",
+    "dialCode": "+423",
+    "flagUrl": "https://flagcdn.com/w320/li.png",
+    "emoji": "🇱🇮",
+    "isActive": true
+  },
+  {
+    "name": "Lithuania",
+    "code": "LT",
+    "code3": "LTU",
+    "dialCode": "+370",
+    "flagUrl": "https://flagcdn.com/w320/lt.png",
+    "emoji": "🇱🇹",
+    "isActive": true
+  },
+  {
+    "name": "Luxembourg",
+    "code": "LU",
+    "code3": "LUX",
+    "dialCode": "+352",
+    "flagUrl": "https://flagcdn.com/w320/lu.png",
+    "emoji": "🇱🇺",
+    "isActive": true
+  },
+  {
+    "name": "Macao",
+    "code": "MO",
+    "code3": "MAC",
+    "dialCode": "+853",
+    "flagUrl": "https://flagcdn.com/w320/mo.png",
+    "emoji": "🇲🇴",
+    "isActive": true
+  },
+  {
+    "name": "Macedonia",
+    "code": "MK",
+    "code3": "MKD",
+    "dialCode": "+389",
+    "flagUrl": "https://flagcdn.com/w320/mk.png",
+    "emoji": "🇲🇰",
+    "isActive": true
+  },
+  {
+    "name": "Madagascar",
+    "code": "MG",
+    "code3": "MDG",
+    "dialCode": "+261",
+    "flagUrl": "https://flagcdn.com/w320/mg.png",
+    "emoji": "🇲🇬",
+    "isActive": true
+  },
+  {
+    "name": "Malawi",
+    "code": "MW",
+    "code3": "MWI",
+    "dialCode": "+265",
+    "flagUrl": "https://flagcdn.com/w320/mw.png",
+    "emoji": "🇲🇼",
+    "isActive": true
+  },
+  {
+    "name": "Malaysia",
+    "code": "MY",
+    "code3": "MYS",
+    "dialCode": "+60",
+    "flagUrl": "https://flagcdn.com/w320/my.png",
+    "emoji": "🇲🇾",
+    "isActive": true
+  },
+  {
+    "name": "Maldives",
+    "code": "MV",
+    "code3": "MDV",
+    "dialCode": "+960",
+    "flagUrl": "https://flagcdn.com/w320/mv.png",
+    "emoji": "🇲🇻",
+    "isActive": true
+  },
+  {
+    "name": "Mali",
+    "code": "ML",
+    "code3": "MLI",
+    "dialCode": "+223",
+    "flagUrl": "https://flagcdn.com/w320/ml.png",
+    "emoji": "🇲🇱",
+    "isActive": true
+  },
+  {
+    "name": "Malta",
+    "code": "MT",
+    "code3": "MLT",
+    "dialCode": "+356",
+    "flagUrl": "https://flagcdn.com/w320/mt.png",
+    "emoji": "🇲🇹",
+    "isActive": true
+  },
+  {
+    "name": "Marshall Islands",
+    "code": "MH",
+    "code3": "MHL",
+    "dialCode": "+692",
+    "flagUrl": "https://flagcdn.com/w320/mh.png",
+    "emoji": "🇲🇭",
+    "isActive": true
+  },
+  {
+    "name": "Martinique",
+    "code": "MQ",
+    "code3": "MTQ",
+    "dialCode": "+596",
+    "flagUrl": "https://flagcdn.com/w320/mq.png",
+    "emoji": "🇲🇶",
+    "isActive": true
+  },
+  {
+    "name": "Mauritania",
+    "code": "MR",
+    "code3": "MRT",
+    "dialCode": "+222",
+    "flagUrl": "https://flagcdn.com/w320/mr.png",
+    "emoji": "🇲🇷",
+    "isActive": true
+  },
+  {
+    "name": "Mauritius",
+    "code": "MU",
+    "code3": "MUS",
+    "dialCode": "+230",
+    "flagUrl": "https://flagcdn.com/w320/mu.png",
+    "emoji": "🇲🇺",
+    "isActive": true
+  },
+  {
+    "name": "Mayotte",
+    "code": "YT",
+    "code3": "MYT",
+    "dialCode": "+262",
+    "flagUrl": "https://flagcdn.com/w320/yt.png",
+    "emoji": "🇾🇹",
+    "isActive": true
+  },
+  {
+    "name": "Mexico",
+    "code": "MX",
+    "code3": "MEX",
+    "dialCode": "+52",
+    "flagUrl": "https://flagcdn.com/w320/mx.png",
+    "emoji": "🇲🇽",
+    "isActive": true
+  },
+  {
+    "name": "Micronesia",
+    "code": "FM",
+    "code3": "FSM",
+    "dialCode": "+691",
+    "flagUrl": "https://flagcdn.com/w320/fm.png",
+    "emoji": "🇫🇲",
+    "isActive": true
+  },
+  {
+    "name": "Moldova",
+    "code": "MD",
+    "code3": "MDA",
+    "dialCode": "+373",
+    "flagUrl": "https://flagcdn.com/w320/md.png",
+    "emoji": "🇲🇩",
+    "isActive": true
+  },
+  {
+    "name": "Monaco",
+    "code": "MC",
+    "code3": "MCO",
+    "dialCode": "+377",
+    "flagUrl": "https://flagcdn.com/w320/mc.png",
+    "emoji": "🇲🇨",
+    "isActive": true
+  },
+  {
+    "name": "Mongolia",
+    "code": "MN",
+    "code3": "MNG",
+    "dialCode": "+976",
+    "flagUrl": "https://flagcdn.com/w320/mn.png",
+    "emoji": "🇲🇳",
+    "isActive": true
+  },
+  {
+    "name": "Montenegro",
+    "code": "ME",
+    "code3": "MNE",
+    "dialCode": "+382",
+    "flagUrl": "https://flagcdn.com/w320/me.png",
+    "emoji": "🇲🇪",
+    "isActive": true
+  },
+  {
+    "name": "Montserrat",
+    "code": "MS",
+    "code3": "MSR",
+    "dialCode": "+1664",
+    "flagUrl": "https://flagcdn.com/w320/ms.png",
+    "emoji": "🇲🇸",
+    "isActive": true
+  },
+  {
+    "name": "Morocco",
+    "code": "MA",
+    "code3": "MAR",
+    "dialCode": "+212",
+    "flagUrl": "https://flagcdn.com/w320/ma.png",
+    "emoji": "🇲🇦",
+    "isActive": true
+  },
+  {
+    "name": "Mozambique",
+    "code": "MZ",
+    "code3": "MOZ",
+    "dialCode": "+258",
+    "flagUrl": "https://flagcdn.com/w320/mz.png",
+    "emoji": "🇲🇿",
+    "isActive": true
+  },
+  {
+    "name": "Myanmar",
+    "code": "MM",
+    "code3": "MMR",
+    "dialCode": "+95",
+    "flagUrl": "https://flagcdn.com/w320/mm.png",
+    "emoji": "🇲🇲",
+    "isActive": true
+  },
+  {
+    "name": "Namibia",
+    "code": "NA",
+    "code3": "NAM",
+    "dialCode": "+264",
+    "flagUrl": "https://flagcdn.com/w320/na.png",
+    "emoji": "🇳🇦",
+    "isActive": true
+  },
+  {
+    "name": "Nauru",
+    "code": "NR",
+    "code3": "NRU",
+    "dialCode": "+674",
+    "flagUrl": "https://flagcdn.com/w320/nr.png",
+    "emoji": "🇳🇷",
+    "isActive": true
+  },
+  {
+    "name": "Nepal",
+    "code": "NP",
+    "code3": "NPL",
+    "dialCode": "+977",
+    "flagUrl": "https://flagcdn.com/w320/np.png",
+    "emoji": "🇳🇵",
+    "isActive": true
+  },
+  {
+    "name": "Netherlands",
+    "code": "NL",
+    "code3": "NLD",
+    "dialCode": "+31",
+    "flagUrl": "https://flagcdn.com/w320/nl.png",
+    "emoji": "🇳🇱",
+    "isActive": true
+  },
+  {
+    "name": "New Caledonia",
+    "code": "NC",
+    "code3": "NCL",
+    "dialCode": "+687",
+    "flagUrl": "https://flagcdn.com/w320/nc.png",
+    "emoji": "🇳🇨",
+    "isActive": true
+  },
+  {
+    "name": "New Zealand",
+    "code": "NZ",
+    "code3": "NZL",
+    "dialCode": "+64",
+    "flagUrl": "https://flagcdn.com/w320/nz.png",
+    "emoji": "🇳🇿",
+    "isActive": true
+  },
+  {
+    "name": "Nicaragua",
+    "code": "NI",
+    "code3": "NIC",
+    "dialCode": "+505",
+    "flagUrl": "https://flagcdn.com/w320/ni.png",
+    "emoji": "🇳🇮",
+    "isActive": true
+  },
+  {
+    "name": "Niger",
+    "code": "NE",
+    "code3": "NER",
+    "dialCode": "+227",
+    "flagUrl": "https://flagcdn.com/w320/ne.png",
+    "emoji": "🇳🇪",
+    "isActive": true
+  },
+  {
+    "name": "Nigeria",
+    "code": "NG",
+    "code3": "NGA",
+    "dialCode": "+234",
+    "flagUrl": "https://flagcdn.com/w320/ng.png",
+    "emoji": "🇳🇬",
+    "isActive": true
+  },
+  {
+    "name": "Niue",
+    "code": "NU",
+    "code3": "NIU",
+    "dialCode": "+683",
+    "flagUrl": "https://flagcdn.com/w320/nu.png",
+    "emoji": "🇳🇺",
+    "isActive": true
+  },
+  {
+    "name": "Norfolk Island",
+    "code": "NF",
+    "code3": "NFK",
+    "dialCode": "+672",
+    "flagUrl": "https://flagcdn.com/w320/nf.png",
+    "emoji": "🇳🇫",
+    "isActive": true
+  },
+  {
+    "name": "North Korea",
+    "code": "KP",
+    "code3": "PRK",
+    "dialCode": "+850",
+    "flagUrl": "https://flagcdn.com/w320/kp.png",
+    "emoji": "🇰🇵",
+    "isActive": true
+  },
+  {
+    "name": "Northern Mariana Islands",
+    "code": "MP",
+    "code3": "MNP",
+    "dialCode": "+1670",
+    "flagUrl": "https://flagcdn.com/w320/mp.png",
+    "emoji": "🇲🇵",
+    "isActive": true
+  },
+  {
+    "name": "Norway",
+    "code": "NO",
+    "code3": "NOR",
+    "dialCode": "+47",
+    "flagUrl": "https://flagcdn.com/w320/no.png",
+    "emoji": "🇳🇴",
+    "isActive": true
+  },
+  {
+    "name": "Oman",
+    "code": "OM",
+    "code3": "OMN",
+    "dialCode": "+968",
+    "flagUrl": "https://flagcdn.com/w320/om.png",
+    "emoji": "🇴🇲",
+    "isActive": true
+  },
+  {
+    "name": "Pakistan",
+    "code": "PK",
+    "code3": "PAK",
+    "dialCode": "+92",
+    "flagUrl": "https://flagcdn.com/w320/pk.png",
+    "emoji": "🇵🇰",
+    "isActive": true
+  },
+  {
+    "name": "Palau",
+    "code": "PW",
+    "code3": "PLW",
+    "dialCode": "+680",
+    "flagUrl": "https://flagcdn.com/w320/pw.png",
+    "emoji": "🇵🇼",
+    "isActive": true
+  },
+  {
+    "name": "Palestinian Territory",
+    "code": "PS",
+    "code3": "PSE",
+    "dialCode": "+970",
+    "flagUrl": "https://flagcdn.com/w320/ps.png",
+    "emoji": "🇵🇸",
+    "isActive": true
+  },
+  {
+    "name": "Panama",
+    "code": "PA",
+    "code3": "PAN",
+    "dialCode": "+507",
+    "flagUrl": "https://flagcdn.com/w320/pa.png",
+    "emoji": "🇵🇦",
+    "isActive": true
+  },
+  {
+    "name": "Papua New Guinea",
+    "code": "PG",
+    "code3": "PNG",
+    "dialCode": "+675",
+    "flagUrl": "https://flagcdn.com/w320/pg.png",
+    "emoji": "🇵🇬",
+    "isActive": true
+  },
+  {
+    "name": "Paraguay",
+    "code": "PY",
+    "code3": "PRY",
+    "dialCode": "+595",
+    "flagUrl": "https://flagcdn.com/w320/py.png",
+    "emoji": "🇵🇾",
+    "isActive": true
+  },
+  {
+    "name": "Peru",
+    "code": "PE",
+    "code3": "PER",
+    "dialCode": "+51",
+    "flagUrl": "https://flagcdn.com/w320/pe.png",
+    "emoji": "🇵🇪",
+    "isActive": true
+  },
+  {
+    "name": "Philippines",
+    "code": "PH",
+    "code3": "PHL",
+    "dialCode": "+63",
+    "flagUrl": "https://flagcdn.com/w320/ph.png",
+    "emoji": "🇵🇭",
+    "isActive": true
+  },
+  {
+    "name": "Pitcairn",
+    "code": "PN",
+    "code3": "PCN",
+    "dialCode": "+872",
+    "flagUrl": "https://flagcdn.com/w320/pn.png",
+    "emoji": "🇵🇳",
+    "isActive": true
+  },
+  {
+    "name": "Poland",
+    "code": "PL",
+    "code3": "POL",
+    "dialCode": "+48",
+    "flagUrl": "https://flagcdn.com/w320/pl.png",
+    "emoji": "🇵🇱",
+    "isActive": true
+  },
+  {
+    "name": "Portugal",
+    "code": "PT",
+    "code3": "PRT",
+    "dialCode": "+351",
+    "flagUrl": "https://flagcdn.com/w320/pt.png",
+    "emoji": "🇵🇹",
+    "isActive": true
+  },
+  {
+    "name": "Puerto Rico",
+    "code": "PR",
+    "code3": "PRI",
+    "dialCode": "+1939",
+    "flagUrl": "https://flagcdn.com/w320/pr.png",
+    "emoji": "🇵🇷",
+    "isActive": true
+  },
+  {
+    "name": "Qatar",
+    "code": "QA",
+    "code3": "QAT",
+    "dialCode": "+974",
+    "flagUrl": "https://flagcdn.com/w320/qa.png",
+    "emoji": "🇶🇦",
+    "isActive": true
+  },
+  {
+    "name": "Romania",
+    "code": "RO",
+    "code3": "ROU",
+    "dialCode": "+40",
+    "flagUrl": "https://flagcdn.com/w320/ro.png",
+    "emoji": "🇷🇴",
+    "isActive": true
+  },
+  {
+    "name": "Russia",
+    "code": "RU",
+    "code3": "RUS",
+    "dialCode": "+7",
+    "flagUrl": "https://flagcdn.com/w320/ru.png",
+    "emoji": "🇷🇺",
+    "isActive": true
+  },
+  {
+    "name": "Rwanda",
+    "code": "RW",
+    "code3": "RWA",
+    "dialCode": "+250",
+    "flagUrl": "https://flagcdn.com/w320/rw.png",
+    "emoji": "🇷🇼",
+    "isActive": true
+  },
+  {
+    "name": "Réunion",
+    "code": "RE",
+    "code3": "REU",
+    "dialCode": "+262",
+    "flagUrl": "https://flagcdn.com/w320/re.png",
+    "emoji": "🇷🇪",
+    "isActive": true
+  },
+  {
+    "name": "Saint Barthélemy",
+    "code": "BL",
+    "code3": "BLM",
+    "dialCode": "+590",
+    "flagUrl": "https://flagcdn.com/w320/bl.png",
+    "emoji": "🇧🇱",
+    "isActive": true
+  },
+  {
+    "name": "Saint Helena, Ascension and Tristan Da Cunha",
+    "code": "SH",
+    "code3": "SHN",
+    "dialCode": "+290",
+    "flagUrl": "https://flagcdn.com/w320/sh.png",
+    "emoji": "🇸🇭",
+    "isActive": true
+  },
+  {
+    "name": "Saint Kitts and Nevis",
+    "code": "KN",
+    "code3": "KNA",
+    "dialCode": "+1869",
+    "flagUrl": "https://flagcdn.com/w320/kn.png",
+    "emoji": "🇰🇳",
+    "isActive": true
+  },
+  {
+    "name": "Saint Lucia",
+    "code": "LC",
+    "code3": "LCA",
+    "dialCode": "+1758",
+    "flagUrl": "https://flagcdn.com/w320/lc.png",
+    "emoji": "🇱🇨",
+    "isActive": true
+  },
+  {
+    "name": "Saint Martin (French Part)",
+    "code": "MF",
+    "code3": "MAF",
+    "dialCode": "+590",
+    "flagUrl": "https://flagcdn.com/w320/mf.png",
+    "emoji": "🇲🇫",
+    "isActive": true
+  },
+  {
+    "name": "Saint Pierre and Miquelon",
+    "code": "PM",
+    "code3": "SPM",
+    "dialCode": "+508",
+    "flagUrl": "https://flagcdn.com/w320/pm.png",
+    "emoji": "🇵🇲",
+    "isActive": true
+  },
+  {
+    "name": "Saint Vincent and The Grenadines",
+    "code": "VC",
+    "code3": "VCT",
+    "dialCode": "+1784",
+    "flagUrl": "https://flagcdn.com/w320/vc.png",
+    "emoji": "🇻🇨",
+    "isActive": true
+  },
+  {
+    "name": "Samoa",
+    "code": "WS",
+    "code3": "WSM",
+    "dialCode": "+685",
+    "flagUrl": "https://flagcdn.com/w320/ws.png",
+    "emoji": "🇼🇸",
+    "isActive": true
+  },
+  {
+    "name": "San Marino",
+    "code": "SM",
+    "code3": "SMR",
+    "dialCode": "+378",
+    "flagUrl": "https://flagcdn.com/w320/sm.png",
+    "emoji": "🇸🇲",
+    "isActive": true
+  },
+  {
+    "name": "Sao Tome and Principe",
+    "code": "ST",
+    "code3": "STP",
+    "dialCode": "+239",
+    "flagUrl": "https://flagcdn.com/w320/st.png",
+    "emoji": "🇸🇹",
+    "isActive": true
+  },
+  {
+    "name": "Saudi Arabia",
+    "code": "SA",
+    "code3": "SAU",
+    "dialCode": "+966",
+    "flagUrl": "https://flagcdn.com/w320/sa.png",
+    "emoji": "🇸🇦",
+    "isActive": true
+  },
+  {
+    "name": "Senegal",
+    "code": "SN",
+    "code3": "SEN",
+    "dialCode": "+221",
+    "flagUrl": "https://flagcdn.com/w320/sn.png",
+    "emoji": "🇸🇳",
+    "isActive": true
+  },
+  {
+    "name": "Serbia",
+    "code": "RS",
+    "code3": "SRB",
+    "dialCode": "+381",
+    "flagUrl": "https://flagcdn.com/w320/rs.png",
+    "emoji": "🇷🇸",
+    "isActive": true
+  },
+  {
+    "name": "Seychelles",
+    "code": "SC",
+    "code3": "SYC",
+    "dialCode": "+248",
+    "flagUrl": "https://flagcdn.com/w320/sc.png",
+    "emoji": "🇸🇨",
+    "isActive": true
+  },
+  {
+    "name": "Sierra Leone",
+    "code": "SL",
+    "code3": "SLE",
+    "dialCode": "+232",
+    "flagUrl": "https://flagcdn.com/w320/sl.png",
+    "emoji": "🇸🇱",
+    "isActive": true
+  },
+  {
+    "name": "Singapore",
+    "code": "SG",
+    "code3": "SGP",
+    "dialCode": "+65",
+    "flagUrl": "https://flagcdn.com/w320/sg.png",
+    "emoji": "🇸🇬",
+    "isActive": true
+  },
+  {
+    "name": "Sint Maarten (Dutch Part)",
+    "code": "SX",
+    "code3": "SXM",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/sx.png",
+    "emoji": "🇸🇽",
+    "isActive": true
+  },
+  {
+    "name": "Slovakia",
+    "code": "SK",
+    "code3": "SVK",
+    "dialCode": "+421",
+    "flagUrl": "https://flagcdn.com/w320/sk.png",
+    "emoji": "🇸🇰",
+    "isActive": true
+  },
+  {
+    "name": "Slovenia",
+    "code": "SI",
+    "code3": "SVN",
+    "dialCode": "+386",
+    "flagUrl": "https://flagcdn.com/w320/si.png",
+    "emoji": "🇸🇮",
+    "isActive": true
+  },
+  {
+    "name": "Solomon Islands",
+    "code": "SB",
+    "code3": "SLB",
+    "dialCode": "+677",
+    "flagUrl": "https://flagcdn.com/w320/sb.png",
+    "emoji": "🇸🇧",
+    "isActive": true
+  },
+  {
+    "name": "Somalia",
+    "code": "SO",
+    "code3": "SOM",
+    "dialCode": "+252",
+    "flagUrl": "https://flagcdn.com/w320/so.png",
+    "emoji": "🇸🇴",
+    "isActive": true
+  },
+  {
+    "name": "South Africa",
+    "code": "ZA",
+    "code3": "ZAF",
+    "dialCode": "+27",
+    "flagUrl": "https://flagcdn.com/w320/za.png",
+    "emoji": "🇿🇦",
+    "isActive": true
+  },
+  {
+    "name": "South Georgia",
+    "code": "GS",
+    "code3": "SGS",
+    "dialCode": "+500",
+    "flagUrl": "https://flagcdn.com/w320/gs.png",
+    "emoji": "🇬🇸",
+    "isActive": true
+  },
+  {
+    "name": "South Korea",
+    "code": "KR",
+    "code3": "KOR",
+    "dialCode": "+82",
+    "flagUrl": "https://flagcdn.com/w320/kr.png",
+    "emoji": "🇰🇷",
+    "isActive": true
+  },
+  {
+    "name": "South Sudan",
+    "code": "SS",
+    "code3": "SSD",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/ss.png",
+    "emoji": "🇸🇸",
+    "isActive": true
+  },
+  {
+    "name": "Spain",
+    "code": "ES",
+    "code3": "ESP",
+    "dialCode": "+34",
+    "flagUrl": "https://flagcdn.com/w320/es.png",
+    "emoji": "🇪🇸",
+    "isActive": true
+  },
+  {
+    "name": "Sri Lanka",
+    "code": "LK",
+    "code3": "LKA",
+    "dialCode": "+94",
+    "flagUrl": "https://flagcdn.com/w320/lk.png",
+    "emoji": "🇱🇰",
+    "isActive": true
+  },
+  {
+    "name": "Sudan",
+    "code": "SD",
+    "code3": "SDN",
+    "dialCode": "+249",
+    "flagUrl": "https://flagcdn.com/w320/sd.png",
+    "emoji": "🇸🇩",
+    "isActive": true
+  },
+  {
+    "name": "Suriname",
+    "code": "SR",
+    "code3": "SUR",
+    "dialCode": "+597",
+    "flagUrl": "https://flagcdn.com/w320/sr.png",
+    "emoji": "🇸🇷",
+    "isActive": true
+  },
+  {
+    "name": "Svalbard and Jan Mayen",
+    "code": "SJ",
+    "code3": "SJM",
+    "dialCode": "+47",
+    "flagUrl": "https://flagcdn.com/w320/sj.png",
+    "emoji": "🇸🇯",
+    "isActive": true
+  },
+  {
+    "name": "Swaziland",
+    "code": "SZ",
+    "code3": "SWZ",
+    "dialCode": "+268",
+    "flagUrl": "https://flagcdn.com/w320/sz.png",
+    "emoji": "🇸🇿",
+    "isActive": true
+  },
+  {
+    "name": "Sweden",
+    "code": "SE",
+    "code3": "SWE",
+    "dialCode": "+46",
+    "flagUrl": "https://flagcdn.com/w320/se.png",
+    "emoji": "🇸🇪",
+    "isActive": true
+  },
+  {
+    "name": "Switzerland",
+    "code": "CH",
+    "code3": "CHE",
+    "dialCode": "+41",
+    "flagUrl": "https://flagcdn.com/w320/ch.png",
+    "emoji": "🇨🇭",
+    "isActive": true
+  },
+  {
+    "name": "Syrian Arab Republic",
+    "code": "SY",
+    "code3": "SYR",
+    "dialCode": "+963",
+    "flagUrl": "https://flagcdn.com/w320/sy.png",
+    "emoji": "🇸🇾",
+    "isActive": true
+  },
+  {
+    "name": "Taiwan",
+    "code": "TW",
+    "code3": "TWN",
+    "dialCode": "+886",
+    "flagUrl": "https://flagcdn.com/w320/tw.png",
+    "emoji": "🇹🇼",
+    "isActive": true
+  },
+  {
+    "name": "Tajikistan",
+    "code": "TJ",
+    "code3": "TJK",
+    "dialCode": "+992",
+    "flagUrl": "https://flagcdn.com/w320/tj.png",
+    "emoji": "🇹🇯",
+    "isActive": true
+  },
+  {
+    "name": "Tanzania",
+    "code": "TZ",
+    "code3": "TZA",
+    "dialCode": "+255",
+    "flagUrl": "https://flagcdn.com/w320/tz.png",
+    "emoji": "🇹🇿",
+    "isActive": true
+  },
+  {
+    "name": "Thailand",
+    "code": "TH",
+    "code3": "THA",
+    "dialCode": "+66",
+    "flagUrl": "https://flagcdn.com/w320/th.png",
+    "emoji": "🇹🇭",
+    "isActive": true
+  },
+  {
+    "name": "Timor-Leste",
+    "code": "TL",
+    "code3": "TLS",
+    "dialCode": "+670",
+    "flagUrl": "https://flagcdn.com/w320/tl.png",
+    "emoji": "🇹🇱",
+    "isActive": true
+  },
+  {
+    "name": "Togo",
+    "code": "TG",
+    "code3": "TGO",
+    "dialCode": "+228",
+    "flagUrl": "https://flagcdn.com/w320/tg.png",
+    "emoji": "🇹🇬",
+    "isActive": true
+  },
+  {
+    "name": "Tokelau",
+    "code": "TK",
+    "code3": "TKL",
+    "dialCode": "+690",
+    "flagUrl": "https://flagcdn.com/w320/tk.png",
+    "emoji": "🇹🇰",
+    "isActive": true
+  },
+  {
+    "name": "Tonga",
+    "code": "TO",
+    "code3": "TON",
+    "dialCode": "+676",
+    "flagUrl": "https://flagcdn.com/w320/to.png",
+    "emoji": "🇹🇴",
+    "isActive": true
+  },
+  {
+    "name": "Trinidad and Tobago",
+    "code": "TT",
+    "code3": "TTO",
+    "dialCode": "+1868",
+    "flagUrl": "https://flagcdn.com/w320/tt.png",
+    "emoji": "🇹🇹",
+    "isActive": true
+  },
+  {
+    "name": "Tunisia",
+    "code": "TN",
+    "code3": "TUN",
+    "dialCode": "+216",
+    "flagUrl": "https://flagcdn.com/w320/tn.png",
+    "emoji": "🇹🇳",
+    "isActive": true
+  },
+  {
+    "name": "Turkey",
+    "code": "TR",
+    "code3": "TUR",
+    "dialCode": "+90",
+    "flagUrl": "https://flagcdn.com/w320/tr.png",
+    "emoji": "🇹🇷",
+    "isActive": true
+  },
+  {
+    "name": "Turkmenistan",
+    "code": "TM",
+    "code3": "TKM",
+    "dialCode": "+993",
+    "flagUrl": "https://flagcdn.com/w320/tm.png",
+    "emoji": "🇹🇲",
+    "isActive": true
+  },
+  {
+    "name": "Turks and Caicos Islands",
+    "code": "TC",
+    "code3": "TCA",
+    "dialCode": "+1649",
+    "flagUrl": "https://flagcdn.com/w320/tc.png",
+    "emoji": "🇹🇨",
+    "isActive": true
+  },
+  {
+    "name": "Tuvalu",
+    "code": "TV",
+    "code3": "TUV",
+    "dialCode": "+688",
+    "flagUrl": "https://flagcdn.com/w320/tv.png",
+    "emoji": "🇹🇻",
+    "isActive": true
+  },
+  {
+    "name": "Uganda",
+    "code": "UG",
+    "code3": "UGA",
+    "dialCode": "+256",
+    "flagUrl": "https://flagcdn.com/w320/ug.png",
+    "emoji": "🇺🇬",
+    "isActive": true
+  },
+  {
+    "name": "Ukraine",
+    "code": "UA",
+    "code3": "UKR",
+    "dialCode": "+380",
+    "flagUrl": "https://flagcdn.com/w320/ua.png",
+    "emoji": "🇺🇦",
+    "isActive": true
+  },
+  {
+    "name": "United Arab Emirates",
+    "code": "AE",
+    "code3": "ARE",
+    "dialCode": "+971",
+    "flagUrl": "https://flagcdn.com/w320/ae.png",
+    "emoji": "🇦🇪",
+    "isActive": true
+  },
+  {
+    "name": "United Kingdom",
+    "code": "GB",
+    "code3": "GBR",
+    "dialCode": "+44",
+    "flagUrl": "https://flagcdn.com/w320/gb.png",
+    "emoji": "🇬🇧",
+    "isActive": true
+  },
+  {
+    "name": "United States",
+    "code": "US",
+    "code3": "USA",
+    "dialCode": "+1",
+    "flagUrl": "https://flagcdn.com/w320/us.png",
+    "emoji": "🇺🇸",
+    "isActive": true
+  },
+  {
+    "name": "United States Minor Outlying Islands",
+    "code": "UM",
+    "code3": "UMI",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/um.png",
+    "emoji": "🇺🇲",
+    "isActive": true
+  },
+  {
+    "name": "Uruguay",
+    "code": "UY",
+    "code3": "URY",
+    "dialCode": "+598",
+    "flagUrl": "https://flagcdn.com/w320/uy.png",
+    "emoji": "🇺🇾",
+    "isActive": true
+  },
+  {
+    "name": "Uzbekistan",
+    "code": "UZ",
+    "code3": "UZB",
+    "dialCode": "+998",
+    "flagUrl": "https://flagcdn.com/w320/uz.png",
+    "emoji": "🇺🇿",
+    "isActive": true
+  },
+  {
+    "name": "Vanuatu",
+    "code": "VU",
+    "code3": "VUT",
+    "dialCode": "+678",
+    "flagUrl": "https://flagcdn.com/w320/vu.png",
+    "emoji": "🇻🇺",
+    "isActive": true
+  },
+  {
+    "name": "Vatican City",
+    "code": "VA",
+    "code3": "VAT",
+    "dialCode": "+379",
+    "flagUrl": "https://flagcdn.com/w320/va.png",
+    "emoji": "🇻🇦",
+    "isActive": true
+  },
+  {
+    "name": "Venezuela",
+    "code": "VE",
+    "code3": "VEN",
+    "dialCode": "+58",
+    "flagUrl": "https://flagcdn.com/w320/ve.png",
+    "emoji": "🇻🇪",
+    "isActive": true
+  },
+  {
+    "name": "Viet Nam",
+    "code": "VN",
+    "code3": "VNM",
+    "dialCode": "+84",
+    "flagUrl": "https://flagcdn.com/w320/vn.png",
+    "emoji": "🇻🇳",
+    "isActive": true
+  },
+  {
+    "name": "Virgin Islands, British",
+    "code": "VG",
+    "code3": "VGB",
+    "dialCode": "+1284",
+    "flagUrl": "https://flagcdn.com/w320/vg.png",
+    "emoji": "🇻🇬",
+    "isActive": true
+  },
+  {
+    "name": "Virgin Islands, U.S.",
+    "code": "VI",
+    "code3": "VIR",
+    "dialCode": "+1340",
+    "flagUrl": "https://flagcdn.com/w320/vi.png",
+    "emoji": "🇻🇮",
+    "isActive": true
+  },
+  {
+    "name": "Wallis and Futuna",
+    "code": "WF",
+    "code3": "WLF",
+    "dialCode": "+681",
+    "flagUrl": "https://flagcdn.com/w320/wf.png",
+    "emoji": "🇼🇫",
+    "isActive": true
+  },
+  {
+    "name": "Western Sahara",
+    "code": "EH",
+    "code3": "ESH",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/eh.png",
+    "emoji": "🇪🇭",
+    "isActive": true
+  },
+  {
+    "name": "Yemen",
+    "code": "YE",
+    "code3": "YEM",
+    "dialCode": "+967",
+    "flagUrl": "https://flagcdn.com/w320/ye.png",
+    "emoji": "🇾🇪",
+    "isActive": true
+  },
+  {
+    "name": "Zambia",
+    "code": "ZM",
+    "code3": "ZMB",
+    "dialCode": "+260",
+    "flagUrl": "https://flagcdn.com/w320/zm.png",
+    "emoji": "🇿🇲",
+    "isActive": true
+  },
+  {
+    "name": "Zimbabwe",
+    "code": "ZW",
+    "code3": "ZWE",
+    "dialCode": "+263",
+    "flagUrl": "https://flagcdn.com/w320/zw.png",
+    "emoji": "🇿🇼",
+    "isActive": true
+  },
+  {
+    "name": "Åland Islands",
+    "code": "AX",
+    "code3": "ALA",
+    "dialCode": "+0",
+    "flagUrl": "https://flagcdn.com/w320/ax.png",
+    "emoji": "🇦🇽",
+    "isActive": true
+  }
 ]
