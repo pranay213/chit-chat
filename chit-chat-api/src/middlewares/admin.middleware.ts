@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { errorResponse } from '../utils/response';
 import { AdminRole } from '../constants/roles';
+import { PermissionAction } from '../constants/permissions';
 import { Role } from '../models/role';
 
 export interface AuthRequest extends Request {
@@ -34,7 +35,7 @@ export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFun
   }
 };
 
-export const checkPermission = (moduleName: string, action: 'create' | 'read' | 'update' | 'delete') => {
+export const checkPermission = (moduleName: string, action: PermissionAction) => {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {

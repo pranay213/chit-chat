@@ -1,8 +1,9 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { PermissionAction } from '../constants/permissions';
 
 export interface IPermission {
   module: string; // e.g., 'chats', 'settings', 'admins', 'logs'
-  actions: ('create' | 'read' | 'update' | 'delete')[];
+  actions: PermissionAction[];
 }
 
 export interface IRole extends Document {
@@ -15,7 +16,7 @@ export interface IRole extends Document {
 
 const PermissionSchema = new Schema({
   module: { type: String, required: true },
-  actions: [{ type: String, enum: ['create', 'read', 'update', 'delete'] }]
+  actions: [{ type: String, enum: Object.values(PermissionAction) }]
 }, { _id: false });
 
 const RoleSchema = new Schema<IRole>({
