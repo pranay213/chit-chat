@@ -27,15 +27,18 @@ const swaggerAuth = (req: Request, res: Response, next: NextFunction) => {
   }
 
   const session = getSwaggerCookie(req);
+  console.log(`[Swagger Auth] Path: ${req.path}, Has Session: ${!!session}`);
 
   if (session) {
     try {
       const JWT_SECRET = process.env.JWT_SECRET as string;
       const decoded: any = jwt.verify(session, JWT_SECRET);
+      console.log(`[Swagger Auth] Decoded role: ${decoded?.role}`);
       if (decoded && (decoded.role === AdminRole.SUPER_ADMIN || decoded.role === AdminRole.DEVELOPER)) {
         return next();
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.log(`[Swagger Auth] Token verify failed: ${error.message}`);
       // Invalid or expired token, proceed to login page
     }
   }

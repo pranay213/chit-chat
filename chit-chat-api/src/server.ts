@@ -29,7 +29,7 @@ const io = new Server(server, {
 setupSockets(io);
 // Middleware
 app.use(cors());
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(morgan('dev', { stream: { write: (message) => logger.info(message.trim()) } }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
