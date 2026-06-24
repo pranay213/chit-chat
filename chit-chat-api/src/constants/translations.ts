@@ -72,7 +72,53 @@ export const translations: Record<string, Record<string, string>> = {
     'ADMIN_CREATED': 'Admin created successfully',
     'ADMIN_RETRIEVED': 'Admins retrieved successfully',
     'ADMIN_UPDATED': 'Admin updated successfully',
-    'ADMIN_DELETED': 'Admin deleted successfully'
+    'ADMIN_DELETED': 'Admin deleted successfully',
+    // Country Success
+    'COUNTRY_RETRIEVED': 'Countries retrieved successfully',
+    'COUNTRY_RETRIEVED_FAILED': 'Failed to retrieve countries',
+    // Language Success
+    'LANGUAGE_RETRIEVED': 'Languages retrieved successfully',
+    'LANGUAGE_RETRIEVED_FAILED': 'Failed to retrieve languages',
+    
+    // Country Translations
+    'India': 'India',
+    'United States': 'United States',
+    'United Kingdom': 'United Kingdom',
+    'Canada': 'Canada',
+    'Australia': 'Australia',
+    'Germany': 'Germany',
+    'France': 'France',
+    'Spain': 'Spain',
+    'Italy': 'Italy',
+    'Japan': 'Japan',
+    'China': 'China',
+    'Brazil': 'Brazil',
+    'Mexico': 'Mexico',
+    'South Africa': 'South Africa',
+    'Russia': 'Russia',
+    'Singapore': 'Singapore',
+    'United Arab Emirates': 'United Arab Emirates',
+    'Saudi Arabia': 'Saudi Arabia',
+    'Netherlands': 'Netherlands',
+    'Switzerland': 'Switzerland',
+    'Sweden': 'Sweden',
+    'Norway': 'Norway',
+    'New Zealand': 'New Zealand',
+    'South Korea': 'South Korea',
+    
+    // Language Name Translations
+    'English': 'English',
+    'Spanish': 'Spanish',
+    'Hindi': 'Hindi',
+    'Telugu': 'Telugu',
+    'French': 'French',
+    'German': 'German',
+    'Italian': 'Italian',
+    'Chinese': 'Chinese',
+    'Japanese': 'Japanese',
+    'Arabic': 'Arabic',
+    'Russian': 'Russian',
+    'Portuguese': 'Portuguese'
   },
   es: {
     // Auth Errors
@@ -147,6 +193,52 @@ export const translations: Record<string, Record<string, string>> = {
     'ADMIN_CREATED': 'Administrador creado con éxito',
     'ADMIN_RETRIEVED': 'Administradores recuperados con éxito',
     'ADMIN_UPDATED': 'Administrador actualizado con éxito',
-    'ADMIN_DELETED': 'Administrador eliminado con éxito'
+    'ADMIN_DELETED': 'Administrador eliminado con éxito',
+    // Country Success
+    'COUNTRY_RETRIEVED': 'Países recuperados con éxito',
+    'COUNTRY_RETRIEVED_FAILED': 'Error al recuperar los países',
+    // Language Success
+    'LANGUAGE_RETRIEVED': 'Idiomas recuperados con éxito',
+    'LANGUAGE_RETRIEVED_FAILED': 'Error al recuperar los idiomas',
+    
+    // Country Translations
+    'India': 'India',
+    'United States': 'Estados Unidos',
+    'United Kingdom': 'Reino Unido',
+    'Canada': 'Canadá',
+    'Australia': 'Australia',
+    'Germany': 'Alemania',
+    'France': 'Francia',
+    'Spain': 'España',
+    'Italy': 'Italia',
+    'Japan': 'Japón',
+    'China': 'China',
+    'Brazil': 'Brasil',
+    'Mexico': 'México',
+    'South Africa': 'Sudáfrica',
+    'Russia': 'Rusia',
+    'Singapore': 'Singapur',
+    'United Arab Emirates': 'Emiratos Árabes Unidos',
+    'Saudi Arabia': 'Arabia Saudita',
+    'Netherlands': 'Países Bajos',
+    'Switzerland': 'Suiza',
+    'Sweden': 'Suecia',
+    'Norway': 'Noruega',
+    'New Zealand': 'Nueva Zelanda',
+    'South Korea': 'Corea del Sur',
+    
+    // Language Name Translations
+    'English': 'Inglés',
+    'Spanish': 'Español',
+    'Hindi': 'Hindi',
+    'Telugu': 'Telugu',
+    'French': 'Francés',
+    'German': 'Alemán',
+    'Italian': 'Italiano',
+    'Chinese': 'Chino',
+    'Japanese': 'Japonés',
+    'Arabic': 'Árabe',
+    'Russian': 'Ruso',
+    'Portuguese': 'Portugués'
   }
 };

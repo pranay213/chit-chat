@@ -1,5 +1,8 @@
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 import { Admin } from '../models/admin';
+import { Country } from '../models/country';
 import { AdminRole } from '../constants/roles';
 import logger from './logger';
 
@@ -35,5 +38,21 @@ export const seedDefaultAdmins = async () => {
     }
   } catch (error) {
     logger.error(`Failed to seed default admins: ${error}`);
+  }
+};
+
+export const seedCountries = async () => {
+  try {
+    const count = await Country.countDocuments();
+    if (count === 0) {
+      const countriesFilePath = path.join(__dirname, '../constants/countries.json');
+      const fileData = fs.readFileSync(countriesFilePath, 'utf8');
+      const countriesList = JSON.parse(fileData);
+
+      await Country.insertMany(countriesList);
+      logger.info(`Seeded ${countriesList.length} default countries into database.`);
+    }
+  } catch (error) {
+    logger.error(`Failed to seed countries: ${error}`);
   }
 };

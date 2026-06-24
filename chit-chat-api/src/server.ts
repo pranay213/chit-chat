@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { connectDB } from './config/database';
-import { seedDefaultAdmins } from './utils/seeder';
+import { seedDefaultAdmins, seedCountries } from './utils/seeder';
 import apiRoutes from './routes';
 import { setupSockets } from './sockets';
 import logger from './utils/logger';
@@ -16,6 +16,7 @@ dotenv.config();
 // Connect to Database
 connectDB().then(() => {
   seedDefaultAdmins();
+  seedCountries();
 });
 const app = express();
 const server = http.createServer(app);

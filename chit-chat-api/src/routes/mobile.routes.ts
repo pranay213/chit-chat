@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { sendOtp, verifyOtp, updateProfile } from '../controllers/auth.controller';
 import { getUserChats, getChatMessages, createGroupChat } from '../controllers/chat.controller';
 import { getMySessionsMobile, revokeSession, revokeOtherSessionsMobile } from '../controllers/session.controller';
+import { getCountries, getLanguages } from '../controllers/metadata.controller';
 import { authenticateUser } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -20,5 +21,9 @@ router.post('/chats/group', authenticateUser, createGroupChat);
 router.get('/sessions', authenticateUser, getMySessionsMobile);
 router.delete('/sessions/other', authenticateUser, revokeOtherSessionsMobile);
 router.delete('/sessions/:id', authenticateUser, revokeSession);
+
+// Metadata Routes (Public)
+router.get('/metadata/countries', getCountries);
+router.get('/metadata/languages', getLanguages);
 
 export default router;
