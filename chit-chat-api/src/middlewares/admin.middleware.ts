@@ -5,6 +5,8 @@ import { AdminRole } from '../constants/roles';
 import { PermissionAction } from '../constants/permissions';
 import { Role } from '../models/role';
 import { Session } from '../models/session';
+import { cache } from '../utils/cache';
+import { ErrorMessages } from '../constants/errors';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -14,7 +16,7 @@ export const authenticateAdmin = async (req: AuthRequest, res: Response, next: N
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
-    errorResponse(res, 401, 'No token, authorization denied');
+    errorResponse(res, 401, ErrorMessages.AUTH.TOKEN_NOT_PROVIDED);
     return;
   }
 
@@ -25,14 +27,14 @@ export const authenticateAdmin = async (req: AuthRequest, res: Response, next: N
     // Verify that session exists and is active in database
     const session = await Session.findOne({ token, isActive: true });
     if (!session) {
-      errorResponse(res, 401, 'Session has been revoked or expired');
+      errorResponse(res, 401, ErrorMessages.AUTH.SESSION_INACTIVE);
       return;
     }
 
     req.user = decoded;
     next();
   } catch (error) {
-    errorResponse(res, 401, 'Token is not valid');
+    errorResponse(res, 401, ErrorMessages.AUTH.INVALID_TOKEN);
   }
 };
 
@@ -40,17 +42,15 @@ export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFun
   if (req.user && (req.user.role === AdminRole.SUPER_ADMIN || req.user.role === AdminRole.DEVELOPER)) {
     next();
   } else {
-    errorResponse(res, 403, 'Access denied. Super Admin or Developer role required.');
+    errorResponse(res, 403, ErrorMessages.AUTH.ACCESS_DENIED_SUPER_ADMIN);
   }
 };
-
-import { cache } from '../utils/cache';
 
 export const checkPermission = (moduleName: string, action: PermissionAction) => {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
-        errorResponse(res, 401, 'Unauthorized');
+        errorResponse(res, 401, ErrorMessages.AUTH.UNAUTHORIZED);
         return;
       }
 
@@ -69,7 +69,7 @@ export const checkPermission = (moduleName: string, action: PermissionAction) =>
       }
 
       if (!roleDoc) {
-        errorResponse(res, 403, 'Access denied. Role not found.');
+        errorResponse(res, 403, ErrorMessages.AUTH.ACCESS_DENIED_ROLE);
         return;
       }
 

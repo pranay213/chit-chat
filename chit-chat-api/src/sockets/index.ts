@@ -4,6 +4,8 @@ import { User } from '../models/user';
 import { Message } from '../models/message';
 import { Chat } from '../models/chat';
 import { Session } from '../models/session';
+import { SocketEvents } from '../constants/socketEvents';
+import { ErrorMessages } from '../constants/errors';
 import logger from '../utils/logger';
 
 // In-memory active connections mapping (userId -> Set of active socketIds)
@@ -15,7 +17,7 @@ export const setupSockets = (io: Server) => {
     try {
       const token = socket.handshake.auth?.token || socket.handshake.query?.token;
       if (!token) {
-        return next(new Error('Authentication error: Token not provided'));
+        return next(new Error(ErrorMessages.AUTH.TOKEN_NOT_PROVIDED));
       }
 
       const JWT_SECRET = process.env.JWT_SECRET as string;
@@ -24,7 +26,7 @@ export const setupSockets = (io: Server) => {
       // Validate session is active in database (lean query for performance)
       const session = await Session.findOne({ token, isActive: true }).lean();
       if (!session) {
-        return next(new Error('Authentication error: Session inactive or revoked'));
+        return next(new Error(ErrorMessages.AUTH.SESSION_INACTIVE));
       }
 
       // Pre-load user profile details to eliminate DB lookups during chat message broadcast
@@ -35,11 +37,11 @@ export const setupSockets = (io: Server) => {
       next();
     } catch (err) {
       logger.error(`Socket auth error: ${err}`);
-      return next(new Error('Authentication error: Invalid credentials'));
+      return next(new Error(ErrorMessages.AUTH.INVALID_CREDENTIALS));
     }
   });
 
-  io.on('connection', (socket: Socket) => {
+  io.on(SocketEvents.CONNECTION, (socket: Socket) => {
     const userId = socket.data.user.id;
     logger.info(`User connected to socket: ${userId} (Socket: ${socket.id})`);
 
@@ -54,27 +56,27 @@ export const setupSockets = (io: Server) => {
       .catch(err => logger.error(`Error updating user online status: ${err}`));
 
     // Broadcast online status to other users
-    socket.broadcast.emit('userStatusUpdate', { userId, status: 'online' });
+    socket.broadcast.emit(SocketEvents.USER_STATUS_UPDATE, { userId, status: 'online' });
 
     // Join Chat Rooms
-    socket.on('joinChat', (chatId: string) => {
+    socket.on(SocketEvents.JOIN_CHAT, (chatId: string) => {
       socket.join(`chat:${chatId}`);
       logger.info(`User ${userId} joined room chat:${chatId}`);
     });
 
     // Leave Chat Rooms
-    socket.on('leaveChat', (chatId: string) => {
+    socket.on(SocketEvents.LEAVE_CHAT, (chatId: string) => {
       socket.leave(`chat:${chatId}`);
       logger.info(`User ${userId} left room chat:${chatId}`);
     });
 
     // Send Message Event (OPTIMIZED - Broadcasts instantly, persists in background)
-    socket.on('sendMessage', async (payload: { chatId: string; text?: string; attachments?: any[] }, callback) => {
+    socket.on(SocketEvents.SEND_MESSAGE, async (payload: { chatId: string; text?: string; attachments?: any[] }, callback) => {
       try {
         const { chatId, text, attachments } = payload;
 
         if (!chatId) {
-          if (callback) callback({ success: false, error: 'Chat ID is required' });
+          if (callback) callback({ success: false, error: ErrorMessages.CHAT.CHAT_ID_REQUIRED });
           return;
         }
 
@@ -106,7 +108,7 @@ export const setupSockets = (io: Server) => {
         };
 
         // 3. Broadcast message instantly to all users in the room (including sender)
-        io.to(`chat:${chatId}`).emit('message', populatedMessage);
+        io.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE, populatedMessage);
 
         // 4. Save to DB and update Chat document in parallel background threads (non-blocking)
         Promise.all([
@@ -118,21 +120,21 @@ export const setupSockets = (io: Server) => {
         if (callback) callback({ success: true, message: populatedMessage });
       } catch (error) {
         logger.error(`Socket sendMessage error: ${error}`);
-        if (callback) callback({ success: false, error: 'Internal server error sending message' });
+        if (callback) callback({ success: false, error: ErrorMessages.SYSTEM.SERVER_ERROR });
       }
     });
 
     // Typing Indicators
-    socket.on('typing', (chatId: string) => {
-      socket.to(`chat:${chatId}`).emit('typing', { chatId, userId });
+    socket.on(SocketEvents.TYPING, (chatId: string) => {
+      socket.to(`chat:${chatId}`).emit(SocketEvents.TYPING, { chatId, userId });
     });
 
-    socket.on('stopTyping', (chatId: string) => {
-      socket.to(`chat:${chatId}`).emit('stopTyping', { chatId, userId });
+    socket.on(SocketEvents.STOP_TYPING, (chatId: string) => {
+      socket.to(`chat:${chatId}`).emit(SocketEvents.STOP_TYPING, { chatId, userId });
     });
 
     // Message Status Update Events (Read / Delivered acknowledgments)
-    socket.on('messageRead', (payload: { chatId: string; messageId: string }) => {
+    socket.on(SocketEvents.MESSAGE_READ, (payload: { chatId: string; messageId: string }) => {
       const { chatId, messageId } = payload;
       
       // Update read status in database background
@@ -140,10 +142,10 @@ export const setupSockets = (io: Server) => {
         .catch(err => logger.error(`Error updating message read status: ${err}`));
 
       // Broadcast acknowledgment
-      socket.to(`chat:${chatId}`).emit('messageRead', { chatId, messageId, userId });
+      socket.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE_READ, { chatId, messageId, userId });
     });
 
-    socket.on('messageDelivered', (payload: { chatId: string; messageId: string }) => {
+    socket.on(SocketEvents.MESSAGE_DELIVERED, (payload: { chatId: string; messageId: string }) => {
       const { chatId, messageId } = payload;
 
       // Update delivery status in database background
@@ -151,11 +153,11 @@ export const setupSockets = (io: Server) => {
         .catch(err => logger.error(`Error updating message delivery status: ${err}`));
 
       // Broadcast acknowledgment
-      socket.to(`chat:${chatId}`).emit('messageDelivered', { chatId, messageId, userId });
+      socket.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE_DELIVERED, { chatId, messageId, userId });
     });
 
     // Disconnect Event Handler
-    socket.on('disconnect', () => {
+    socket.on(SocketEvents.DISCONNECT, () => {
       logger.info(`User disconnected from socket: ${userId} (Socket: ${socket.id})`);
       
       const userSockets = onlineUsers.get(userId);
@@ -169,7 +171,7 @@ export const setupSockets = (io: Server) => {
             .catch(err => logger.error(`Error updating user offline status: ${err}`));
 
           // Broadcast offline state update
-          socket.broadcast.emit('userStatusUpdate', { userId, status: 'offline', lastSeen: new Date() });
+          socket.broadcast.emit(SocketEvents.USER_STATUS_UPDATE, { userId, status: 'offline', lastSeen: new Date() });
         }
       }
     });
