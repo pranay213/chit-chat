@@ -13,6 +13,8 @@ export interface IMessage extends Document {
   attachments?: Attachment[];
   readBy: Types.ObjectId[];
   deliveredTo: Types.ObjectId[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 const messageSchema = new Schema<IMessage>(
   {
