@@ -7,10 +7,11 @@ import {
   Image, 
   TouchableOpacity, 
   TextInput, 
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  ImageBackground
+  KeyboardAvoidingView, 
+  Platform, 
+  ActivityIndicator, 
+  ImageBackground,
+  Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -39,6 +40,67 @@ interface Message {
   createdAt: string;
 }
 
+const TypingIndicator = () => {
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animate = (val: Animated.Value, delay: number) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(val, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true
+          }),
+          Animated.timing(val, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true
+          })
+        ])
+      );
+    };
+
+    const anim1 = animate(dot1, 0);
+    const anim2 = animate(dot2, 150);
+    const anim3 = animate(dot3, 300);
+
+    anim1.start();
+    anim2.start();
+    anim3.start();
+
+    return () => {
+      anim1.stop();
+      anim2.stop();
+      anim3.stop();
+    };
+  }, []);
+
+  const getStyle = (val: Animated.Value) => ({
+    transform: [{
+      translateY: val.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, -6]
+      })
+    }],
+    opacity: val.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.4, 1]
+    })
+  });
+
+  return (
+    <View style={styles.typingDotsRow}>
+      <Animated.View style={[styles.typingDot, getStyle(dot1)]} />
+      <Animated.View style={[styles.typingDot, getStyle(dot2)]} />
+      <Animated.View style={[styles.typingDot, getStyle(dot3)]} />
+    </View>
+  );
+};
+
 export default function ChatScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -56,6 +118,14 @@ export default function ChatScreen() {
 
   const flatListRef = useRef<FlatList>(null);
   const socket = getSocket();
+
+  useEffect(() => {
+    if (isTyping) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 150);
+    }
+  }, [isTyping]);
 
   const fetchMessages = async () => {
     if (!token) return;
@@ -335,6 +405,19 @@ export default function ChatScreen() {
                   </View>
                 );
               }}
+              ListFooterComponent={() => {
+                if (!isTyping) return null;
+                return (
+                  <View style={[styles.messageBubble, styles.incomingBubble, styles.typingBubble]}>
+                    {!isGroup && (
+                      <Text style={[styles.senderName, { color: '#7E57C2' }]}>
+                        {headerName}
+                      </Text>
+                    )}
+                    <TypingIndicator />
+                  </View>
+                );
+              }}
             />
           )}
 
@@ -582,5 +665,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 4,
+  },
+  typingBubble: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    minWidth: 70,
+    alignItems: 'flex-start',
+  },
+  typingDotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 12,
+    marginTop: 4,
+  },
+  typingDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#999',
+    marginHorizontal: 3,
   },
 });
