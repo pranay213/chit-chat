@@ -16,7 +16,7 @@ const ollama = new Ollama({
 
 export const generateOllamaResponse = async (
   messages: OllamaChatMessage[],
-  modelName: string = 'llama3' // Using a low token model (like llama3) by default
+  modelName: string = 'gpt-oss:20b' // Using gpt-oss:20b as the low token model hosted on this endpoint
 ): Promise<string> => {
   try {
     logger.info(`Sending chat request to Ollama with model: ${modelName}`);
