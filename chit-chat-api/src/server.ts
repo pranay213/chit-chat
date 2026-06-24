@@ -9,6 +9,7 @@ import { connectDB } from './config/database';
 import apiRoutes from './routes';
 import { setupSockets } from './sockets';
 import logger from './utils/logger';
+import { setupSwagger } from './utils/swagger';
 // Load environment variables
 dotenv.config();
 // Connect to Database
@@ -29,6 +30,8 @@ app.use(helmet());
 app.use(morgan('dev', { stream: { write: (message) => logger.info(message.trim()) } }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Swagger API Docs
+setupSwagger(app);
 // Routes
 app.use('/api/v1', apiRoutes);
 // Start server
