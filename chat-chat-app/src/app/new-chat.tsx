@@ -191,6 +191,37 @@ export default function NewChatScreen() {
     }
   };
 
+  const startAIChat = async () => {
+    // Find Ollama AI Bot in contacts
+    const aiBot = contacts.find(c => c.mobileNumber === '9999999999');
+    if (aiBot) {
+      await startChat(aiBot);
+    } else {
+      if (!user || !token) return;
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const resData = await response.json();
+          const dbUsers = resData.data?.data || resData.data || resData.docs || [];
+          const matchedBot = dbUsers.find((u: any) => u.mobileNumber === '9999999999');
+          if (matchedBot) {
+            await startChat(matchedBot);
+            return;
+          }
+        }
+        Alert.alert('Error', 'Ollama AI Bot user not found. Please verify the backend is running.');
+      } catch (err) {
+        console.error('Error starting AI Chat:', err);
+        Alert.alert('Error', 'Failed to start AI Chat session');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
@@ -255,6 +286,13 @@ export default function NewChatScreen() {
                    <Ionicons name="globe" size={22} color="#7E57C2" />
                 </View>
                 <Text style={styles.actionText}>New Community</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionItem} onPress={startAIChat}>
+                <View style={[styles.actionIconContainer, { backgroundColor: '#E8F5E9' }]}>
+                   <Ionicons name="hardware-chip" size={22} color="#00C853" />
+                </View>
+                <Text style={[styles.actionText, { color: '#00C853', fontWeight: '600' }]}>Chat with AI (Ollama)</Text>
               </TouchableOpacity>
 
               <Text style={styles.sectionHeader}>Contacts</Text>

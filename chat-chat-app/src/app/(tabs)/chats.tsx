@@ -171,6 +171,72 @@ export default function ChatsScreen() {
     setSelectedChats(allIds);
   };
 
+  const startAIChat = async () => {
+    if (!user || !token) return;
+    setLoading(true);
+    try {
+      // 1. Check if chat thread already exists in the list
+      const existingAIChat = chats.find(c => 
+        !c.isGroup && 
+        c.participants.some((p: any) => p.mobileNumber === '9999999999')
+      );
+
+      if (existingAIChat) {
+        const otherParticipant = existingAIChat.participants.find((p: any) => p.mobileNumber === '9999999999');
+        router.push({
+          pathname: '/chat/[id]',
+          params: {
+            id: existingAIChat._id,
+            chatName: otherParticipant?.displayName || 'Ollama AI Bot',
+            chatAvatar: otherParticipant?.profileImage || '',
+            isGroup: 'false',
+            isOnline: 'true',
+            receiverId: otherParticipant?._id || ''
+          }
+        });
+        return;
+      }
+
+      // 2. Otherwise find the AI user profile from backend
+      const usersRes = await fetch(`${API_BASE_URL}/users`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!usersRes.ok) throw new Error('Failed to fetch user list');
+      const usersData = await usersRes.json();
+      const dbUsers = usersData.data?.data || usersData.data || usersData.docs || [];
+      const aiBotUser = dbUsers.find((u: any) => u.mobileNumber === '9999999999');
+
+      if (!aiBotUser) {
+        Alert.alert('Error', 'Ollama AI Bot not found in database. Make sure seeder ran.');
+        return;
+      }
+
+      // 3. Create/Get chat with the AI user
+      const chatRes = await api.createOrGetChat(user._id, aiBotUser._id, token);
+      const chat = chatRes.chat;
+      if (chat) {
+        router.push({
+          pathname: '/chat/[id]',
+          params: {
+            id: chat._id,
+            chatName: aiBotUser.displayName || 'Ollama AI Bot',
+            chatAvatar: aiBotUser.profileImage || '',
+            isGroup: 'false',
+            isOnline: 'true',
+            receiverId: aiBotUser._id
+          }
+        });
+      } else {
+        Alert.alert('Error', 'Could not initiate chat with Ollama AI Bot');
+      }
+    } catch (error: any) {
+      console.error('Error starting AI Chat:', error);
+      Alert.alert('Error', error.message || 'Failed to start AI chat session');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchChats = async () => {
     if (!user || !token) return;
     setLoading(true);
@@ -540,6 +606,14 @@ export default function ChatsScreen() {
         />
       )}
 
+      {/* Floating Action Button (FAB) for AI Chat */}
+      <TouchableOpacity 
+        style={[styles.fab, styles.aiFab]}
+        onPress={startAIChat}
+      >
+        <Ionicons name="hardware-chip" size={24} color="#FFF" />
+      </TouchableOpacity>
+
       {/* Floating Action Button (FAB) */}
       <TouchableOpacity 
         style={styles.fab}
@@ -794,6 +868,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
+  },
+  aiFab: {
+    bottom: 86,
+    backgroundColor: '#00E676',
+    shadowColor: '#00E676',
   },
   dropdownMenu: {
     position: 'absolute',

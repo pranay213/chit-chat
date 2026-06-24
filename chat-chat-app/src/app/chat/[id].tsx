@@ -99,11 +99,10 @@ export default function ChatScreen() {
         }
       });
 
-      // Typing Indicator Listeners
       socket.on('typing', (data: any) => {
         if (data.chatId === chatId && data.userId !== user?._id) {
           setIsTyping(true);
-          setTypingUser('Someone');
+          setTypingUser(isGroup ? 'Someone' : headerName);
         }
       });
 
