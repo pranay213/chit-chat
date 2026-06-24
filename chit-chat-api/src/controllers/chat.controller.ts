@@ -57,3 +57,47 @@ export const createGroupChat = async (req: Request, res: Response): Promise<void
     errorResponse(res, 500, ErrorMessages.CHAT.CREATED_FAILED, error);
   }
 };
+
+export const updateChatDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { chatId } = req.params;
+    const { groupName, groupPhoto, participants, admins } = req.body;
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      errorResponse(res, 404, ErrorMessages.CHAT.CHAT_NOT_FOUND);
+      return;
+    }
+
+    if (groupName !== undefined) chat.groupName = groupName;
+    if (groupPhoto !== undefined) chat.groupPhoto = groupPhoto;
+    if (participants !== undefined) chat.participants = participants.map((id: string) => new mongoose.Types.ObjectId(id));
+    if (admins !== undefined) chat.admins = admins.map((id: string) => new mongoose.Types.ObjectId(id));
+
+    await chat.save();
+    successResponse(res, 200, SuccessMessages.CHAT.UPDATED, { chat });
+  } catch (error) {
+    errorResponse(res, 500, ErrorMessages.CHAT.UPDATED_FAILED, error);
+  }
+};
+
+export const updateMessage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { messageId } = req.params;
+    const { text, attachments } = req.body;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      errorResponse(res, 404, ErrorMessages.CHAT.MESSAGE_NOT_FOUND);
+      return;
+    }
+
+    if (text !== undefined) message.text = text;
+    if (attachments !== undefined) message.attachments = attachments;
+
+    await message.save();
+    successResponse(res, 200, SuccessMessages.CHAT.MESSAGE_UPDATED, { message });
+  } catch (error) {
+    errorResponse(res, 500, ErrorMessages.CHAT.MESSAGE_UPDATED_FAILED, error);
+  }
+};

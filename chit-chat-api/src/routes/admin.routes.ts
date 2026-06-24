@@ -4,6 +4,7 @@ import { loginAdmin, createAdmin, getAdmins, updateAdmin, deleteAdmin } from '..
 import { getSettings, updateSettings } from '../controllers/setting.controller';
 import { createRole, getRoles, getRoleById, updateRole, deleteRole } from '../controllers/role.controller';
 import { getSessionsAdmin, revokeSession } from '../controllers/session.controller';
+import { createUser, getUsers, getUserById, updateUser, deleteUser } from '../controllers/user.controller';
 import { authenticateAdmin, requireSuperAdmin } from '../middlewares/admin.middleware';
 
 const router = Router();
@@ -23,6 +24,13 @@ router.post('/', requireSuperAdmin, createAdmin);
 router.get('/', requireSuperAdmin, getAdmins);
 router.put('/:id', requireSuperAdmin, updateAdmin);
 router.delete('/:id', requireSuperAdmin, deleteAdmin);
+
+// Mobile User Management (Protected - Admin & Super Admin)
+router.post('/users', createUser);
+router.get('/users', getUsers);
+router.get('/users/:id', getUserById);
+router.put('/users/:id', updateUser);
+router.delete('/users/:id', deleteUser);
 
 // System Settings (Protected & SUPER_ADMIN only)
 router.get('/settings', requireSuperAdmin, getSettings);
