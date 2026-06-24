@@ -3,6 +3,7 @@ import { successResponse } from '../utils/response';
 import { loginAdmin, createAdmin, getAdmins, updateAdmin, deleteAdmin } from '../controllers/admin.controller';
 import { getSettings, updateSettings } from '../controllers/setting.controller';
 import { createRole, getRoles, getRoleById, updateRole, deleteRole } from '../controllers/role.controller';
+import { getSessionsAdmin, revokeSession } from '../controllers/session.controller';
 import { authenticateAdmin, requireSuperAdmin } from '../middlewares/admin.middleware';
 
 const router = Router();
@@ -33,5 +34,9 @@ router.get('/roles', requireSuperAdmin, getRoles);
 router.get('/roles/:id', requireSuperAdmin, getRoleById);
 router.put('/roles/:id', requireSuperAdmin, updateRole);
 router.delete('/roles/:id', requireSuperAdmin, deleteRole);
+
+// System Sessions Management
+router.get('/sessions', requireSuperAdmin, getSessionsAdmin);
+router.delete('/sessions/:id', requireSuperAdmin, revokeSession);
 
 export default router;

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Admin } from '../models/admin';
+import { Session } from '../models/session';
 import { AdminRole } from '../constants/roles';
 import { successResponse, errorResponse } from '../utils/response';
 import logger from '../utils/logger';
@@ -26,6 +27,20 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
 
     const token = jwt.sign({ id: admin._id, role: admin.role }, JWT_SECRET, { expiresIn: '1d' });
     
+    // Create session tracking in DB
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 1); // 1 day expiry matching token
+
+    await Session.create({
+      adminId: admin._id,
+      userType: 'admin',
+      token,
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip || req.socket.remoteAddress,
+      isActive: true,
+      expiresAt
+    });
+
     const adminData = admin.toObject();
     delete (adminData as any).passwordHash;
 

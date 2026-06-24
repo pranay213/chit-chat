@@ -4,12 +4,13 @@ import { errorResponse } from '../utils/response';
 import { AdminRole } from '../constants/roles';
 import { PermissionAction } from '../constants/permissions';
 import { Role } from '../models/role';
+import { Session } from '../models/session';
 
 export interface AuthRequest extends Request {
   user?: any;
 }
 
-export const authenticateAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const authenticateAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
@@ -20,6 +21,14 @@ export const authenticateAdmin = (req: AuthRequest, res: Response, next: NextFun
   try {
     const JWT_SECRET = process.env.JWT_SECRET as string;
     const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Verify that session exists and is active in database
+    const session = await Session.findOne({ token, isActive: true });
+    if (!session) {
+      errorResponse(res, 401, 'Session has been revoked or expired');
+      return;
+    }
+
     req.user = decoded;
     next();
   } catch (error) {

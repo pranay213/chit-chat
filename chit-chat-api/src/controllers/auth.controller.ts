@@ -1,7 +1,10 @@
 import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { User } from '../models/user';
+import { Session } from '../models/session';
 import { generateAndSendOtp, verifyOtpCode } from '../services/otp.service';
 import { successResponse, errorResponse } from '../utils/response';
+
 export const sendOtp = async (req: Request, res: Response): Promise<void> => {
   try {
     const { mobileNumber, email } = req.body;
@@ -24,6 +27,7 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
     errorResponse(res, 500, 'Failed to send OTP', error);
   }
 };
+
 export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   try {
     const { mobileNumber, email, otp } = req.body;
@@ -50,8 +54,31 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
         user = await User.findOne({ mobileNumber });
         if (!user) user = await User.create({ mobileNumber });
       }
-      // Generate a JWT token here in a real app
-      successResponse(res, 200, 'OTP verified', { user });
+
+      if (!user) {
+        errorResponse(res, 500, 'Failed to resolve user account');
+        return;
+      }
+
+      // Generate JWT token
+      const JWT_SECRET = process.env.JWT_SECRET as string;
+      const token = jwt.sign({ id: user._id, role: 'user' }, JWT_SECRET, { expiresIn: '30d' });
+
+      // Save user session in DB
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30); // 30 days expiry
+
+      await Session.create({
+        userId: user._id,
+        userType: 'user',
+        token,
+        userAgent: req.headers['user-agent'],
+        ipAddress: req.ip || req.socket.remoteAddress,
+        isActive: true,
+        expiresAt
+      });
+
+      successResponse(res, 200, 'OTP verified successfully', { token, user });
     } else {
       errorResponse(res, 400, 'Invalid OTP');
     }
