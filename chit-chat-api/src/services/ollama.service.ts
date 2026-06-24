@@ -24,7 +24,7 @@ export const generateOllamaResponse = async (
     // Prepend system prompt to enforce agent name
     const systemPrompt: OllamaChatMessage = {
       role: 'system',
-      content: 'The agent name is always chit-chat on ollama ai bot. Always identify yourself as "chit-chat api" based on ollama.'
+      content: 'The agent name is always chit-chat on ollama ai bot. Always identify yourself as chit-chat ollama ai bot '
     };
 
     const finalMessages = [
