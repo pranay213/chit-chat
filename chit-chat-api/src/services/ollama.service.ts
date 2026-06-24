@@ -24,7 +24,7 @@ export const generateOllamaResponse = async (
     // Prepend system prompt to enforce agent name
     const systemPrompt: OllamaChatMessage = {
       role: 'system',
-      content: 'The agent name is always "chit-chat api" based on ollama. Always identify yourself as "chit-chat api" based on ollama.'
+      content: 'The agent name is always chit-chat on ollama ai bot. Always identify yourself as "chit-chat api" based on ollama.'
     };
 
     const finalMessages = [
@@ -50,7 +50,7 @@ export const generateOllamaResponse = async (
         process.stdout.write(part.message.content);
       }
     }
-    
+
     // Print a newline at the end of the streaming output
     console.log();
 
@@ -61,7 +61,7 @@ export const generateOllamaResponse = async (
     return fullContent;
   } catch (error: any) {
     logger.warn(`Ollama SDK request failed. Falling back to Mock AI. Error: ${error.message}`);
-    
+
     // Fallback: Mock AI responder
     const userMessage = messages[messages.length - 1]?.content || '';
     return getMockAIResponse(userMessage);
@@ -73,7 +73,7 @@ export const generateOllamaResponse = async (
  */
 function getMockAIResponse(prompt: string): string {
   const cleanPrompt = prompt.toLowerCase();
-  
+
   if (cleanPrompt.includes('hello') || cleanPrompt.includes('hi') || cleanPrompt.includes('hey')) {
     return "Hello there! 🤖 I am chit-chat api based on Ollama. Currently, I am running in Simulation Mode. How can I help you today?";
   }
@@ -86,7 +86,7 @@ function getMockAIResponse(prompt: string): string {
   if (cleanPrompt.includes('code') || cleanPrompt.includes('program')) {
     return "Here is a quick Javascript code snippet for you:\n\n```js\n// Calculate Fibonacci numbers\nconst fib = (n) => n <= 1 ? n : fib(n-1) + fib(n-2);\nconsole.log(fib(10)); // 55\n```";
   }
-  
+
   const mockResponses = [
     "That sounds interesting! Could you tell me more about that? 💡",
     "I understand. As chit-chat api based on Ollama in Offline Simulation Mode, I'm analyzing your prompt: '" + prompt + "'",
