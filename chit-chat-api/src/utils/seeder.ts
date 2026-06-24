@@ -43,14 +43,17 @@ export const seedDefaultAdmins = async () => {
 
 export const seedCountries = async () => {
   try {
-    const count = await Country.countDocuments();
-    if (count === 0) {
-      const countriesFilePath = path.join(__dirname, '../constants/countries.json');
-      const fileData = fs.readFileSync(countriesFilePath, 'utf8');
-      const countriesList = JSON.parse(fileData);
+    const countriesFilePath = path.join(__dirname, '../constants/countries.json');
+    const fileData = fs.readFileSync(countriesFilePath, 'utf8');
+    const countriesList = JSON.parse(fileData);
 
+    const count = await Country.countDocuments();
+    const hasFlags = await Country.findOne({ flagUrl: { $exists: true } });
+
+    if (count !== countriesList.length || !hasFlags) {
+      await Country.deleteMany({});
       await Country.insertMany(countriesList);
-      logger.info(`Seeded ${countriesList.length} default countries into database.`);
+      logger.info(`Re-seeded ${countriesList.length} default countries with flag URLs and emojis into database.`);
     }
   } catch (error) {
     logger.error(`Failed to seed countries: ${error}`);

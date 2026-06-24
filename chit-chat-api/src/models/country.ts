@@ -4,6 +4,7 @@ export interface ICountry extends Document {
   code: string;
   dialCode: string;
   flagUrl?: string;
+  emoji?: string;
   isActive: boolean;
 }
 const countrySchema = new Schema<ICountry>(
@@ -12,6 +13,7 @@ const countrySchema = new Schema<ICountry>(
     code: { type: String, required: true, unique: true }, // e.g., "IN", "US"
     dialCode: { type: String, required: true }, // e.g., "+91", "+1"
     flagUrl: { type: String },
+    emoji: { type: String },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
