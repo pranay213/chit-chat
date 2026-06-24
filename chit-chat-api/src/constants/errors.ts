@@ -1,55 +1,55 @@
 export const ErrorMessages = {
   AUTH: {
-    TOKEN_NOT_PROVIDED: 'Authentication error: Token not provided',
-    SESSION_INACTIVE: 'Authentication error: Session inactive or revoked',
-    INVALID_CREDENTIALS: 'Authentication error: Invalid credentials',
-    INVALID_TOKEN: 'Token is not valid',
-    UNAUTHORIZED: 'Unauthorized',
-    ACCESS_DENIED_ROLE: 'Access denied. Role not found.',
-    ACCESS_DENIED_SUPER_ADMIN: 'Access denied. Super Admin or Developer role required.',
-    INACTIVE_ACCOUNT: 'Invalid credentials or inactive account',
-    ADMIN_EXISTS: 'Admin with this email already exists',
-    ROLE_EXISTS: 'Role already exists',
-    ROLE_REQUIRED: 'Role name is required',
-    ROLE_NOT_FOUND: 'Role not found',
-    SESSION_NOT_FOUND: 'Session not found',
-    SESSION_REVOKE_UNAUTHORIZED: 'Unauthorized to revoke this session',
-    MISSING_FIELDS: 'Please provide email or mobileNumber',
-    INVALID_OTP: 'Invalid OTP',
-    USER_NOT_FOUND: 'User not found',
-    FAILED_USER_RESOLVE: 'Failed to resolve user account',
-    CURRENT_TOKEN_MISSING: 'Current authorization token not found'
+    TOKEN_NOT_PROVIDED: 'AUTH_TOKEN_NOT_PROVIDED',
+    SESSION_INACTIVE: 'AUTH_SESSION_INACTIVE',
+    INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
+    INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
+    UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+    ACCESS_DENIED_ROLE: 'AUTH_ACCESS_DENIED_ROLE',
+    ACCESS_DENIED_SUPER_ADMIN: 'AUTH_ACCESS_DENIED_SUPER_ADMIN',
+    INACTIVE_ACCOUNT: 'AUTH_INACTIVE_ACCOUNT',
+    ADMIN_EXISTS: 'AUTH_ADMIN_EXISTS',
+    ROLE_EXISTS: 'AUTH_ROLE_EXISTS',
+    ROLE_REQUIRED: 'AUTH_ROLE_REQUIRED',
+    ROLE_NOT_FOUND: 'AUTH_ROLE_NOT_FOUND',
+    SESSION_NOT_FOUND: 'AUTH_SESSION_NOT_FOUND',
+    SESSION_REVOKE_UNAUTHORIZED: 'AUTH_SESSION_REVOKE_UNAUTHORIZED',
+    MISSING_FIELDS: 'AUTH_MISSING_FIELDS',
+    INVALID_OTP: 'AUTH_INVALID_OTP',
+    USER_NOT_FOUND: 'AUTH_USER_NOT_FOUND',
+    FAILED_USER_RESOLVE: 'AUTH_FAILED_USER_RESOLVE',
+    CURRENT_TOKEN_MISSING: 'AUTH_CURRENT_TOKEN_MISSING'
   },
   CHAT: {
-    CHAT_NOT_FOUND: 'Chat not found',
-    CHAT_ID_REQUIRED: 'Chat ID is required'
+    CHAT_NOT_FOUND: 'CHAT_NOT_FOUND',
+    CHAT_ID_REQUIRED: 'CHAT_ID_REQUIRED'
   },
   SYSTEM: {
-    SERVER_ERROR: 'Server Error during request',
-    DB_FAILED: 'Database operation failed'
+    SERVER_ERROR: 'SYSTEM_SERVER_ERROR',
+    DB_FAILED: 'SYSTEM_DB_FAILED'
   }
 };
 
 export const SuccessMessages = {
   AUTH: {
-    LOGIN_SUCCESS: 'Login successful',
-    OTP_SENT: 'OTP sent successfully',
-    OTP_VERIFIED: 'OTP verified successfully',
-    PROFILE_UPDATED: 'Profile updated'
+    LOGIN_SUCCESS: 'AUTH_LOGIN_SUCCESS',
+    OTP_SENT: 'AUTH_OTP_SENT',
+    OTP_VERIFIED: 'AUTH_OTP_VERIFIED',
+    PROFILE_UPDATED: 'AUTH_PROFILE_UPDATED'
   },
   ROLE: {
-    CREATED: 'Role created successfully',
-    RETRIEVED: 'Roles retrieved successfully',
-    UPDATED: 'Role updated successfully',
-    DELETED: 'Role deleted successfully'
+    CREATED: 'ROLE_CREATED',
+    RETRIEVED: 'ROLE_RETRIEVED',
+    UPDATED: 'ROLE_UPDATED',
+    DELETED: 'ROLE_DELETED'
   },
   SESSION: {
-    RETRIEVED: 'Sessions retrieved successfully',
-    REVOKED: 'Session revoked successfully'
+    RETRIEVED: 'SESSION_RETRIEVED',
+    REVOKED: 'SESSION_REVOKED'
   },
   CHAT: {
-    FETCHED: 'Chats fetched successfully',
-    MESSAGES_FETCHED: 'Messages fetched successfully',
-    CREATED: 'Group chat created'
+    FETCHED: 'CHAT_FETCHED',
+    MESSAGES_FETCHED: 'CHAT_MESSAGES_FETCHED',
+    CREATED: 'CHAT_CREATED'
   }
 };
