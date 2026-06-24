@@ -18,4 +18,8 @@ const chatSchema = new Schema<IChat>(
   },
   { timestamps: true }
 );
+
+chatSchema.index({ participants: 1 });
+chatSchema.index({ updatedAt: -1 });
+
 export const Chat = mongoose.model<IChat>('Chat', chatSchema);

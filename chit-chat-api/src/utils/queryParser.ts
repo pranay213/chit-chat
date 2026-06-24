@@ -106,7 +106,8 @@ export const executePaginatedQuery = async <T>(
   model: Model<T>,
   reqQuery: any,
   populateFields: any[] = [],
-  selectFields: string = ''
+  selectFields: string = '',
+  lean: boolean = true
 ): Promise<PaginatedResult<T>> => {
   const { filter, sort, page, limit, skip } = parseQueryParams(reqQuery);
 
@@ -127,6 +128,11 @@ export const executePaginatedQuery = async <T>(
   populateFields.forEach(field => {
     query = query.populate(field);
   });
+
+  // Use lean queries for 5-10x performance boost (raw JSON instead of full Mongoose documents)
+  if (lean) {
+    query = query.lean() as any;
+  }
 
   // Run database query and counts in parallel for optimization
   const [data, totalRecords] = await Promise.all([

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Role } from '../models/role';
 import { successResponse, errorResponse } from '../utils/response';
 import { executePaginatedQuery } from '../utils/queryParser';
+import { cache } from '../utils/cache';
 import logger from '../utils/logger';
 
 export const createRole = async (req: Request, res: Response): Promise<void> => {
@@ -75,6 +76,9 @@ export const updateRole = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    // Invalidate cached role
+    cache.delete(`role:${role.name}`);
+
     successResponse(res, 200, 'Role updated successfully', { role });
   } catch (error) {
     logger.error(`Update Role error: ${error}`);
@@ -91,6 +95,9 @@ export const deleteRole = async (req: Request, res: Response): Promise<void> => 
       errorResponse(res, 404, 'Role not found');
       return;
     }
+
+    // Invalidate cached role
+    cache.delete(`role:${role.name}`);
 
     successResponse(res, 200, 'Role deleted successfully');
   } catch (error) {

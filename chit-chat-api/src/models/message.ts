@@ -32,4 +32,7 @@ const messageSchema = new Schema<IMessage>(
   },
   { timestamps: true }
 );
+
+messageSchema.index({ chatId: 1, createdAt: 1 });
+
 export const Message = mongoose.model<IMessage>('Message', messageSchema);

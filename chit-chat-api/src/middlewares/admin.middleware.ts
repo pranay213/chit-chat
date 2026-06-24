@@ -44,6 +44,8 @@ export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFun
   }
 };
 
+import { cache } from '../utils/cache';
+
 export const checkPermission = (moduleName: string, action: PermissionAction) => {
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -56,13 +58,22 @@ export const checkPermission = (moduleName: string, action: PermissionAction) =>
         return next();
       }
 
-      const roleDoc = await Role.findOne({ name: req.user.role });
+      const cacheKey = `role:${req.user.role}`;
+      let roleDoc = cache.get<any>(cacheKey);
+
+      if (!roleDoc) {
+        roleDoc = await Role.findOne({ name: req.user.role }).lean();
+        if (roleDoc) {
+          cache.set(cacheKey, roleDoc, 600000); // Cache for 10 minutes
+        }
+      }
+
       if (!roleDoc) {
         errorResponse(res, 403, 'Access denied. Role not found.');
         return;
       }
 
-      const permission = roleDoc.permissions.find(p => p.module === moduleName);
+      const permission = roleDoc.permissions.find((p: any) => p.module === moduleName);
       if (permission && permission.actions.includes(action)) {
         return next();
       }
