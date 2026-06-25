@@ -112,7 +112,13 @@ export const api = {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || 'OTP verification failed');
+        const err: any = new Error(data.message || 'OTP verification failed');
+        // Pass along structured fields from the API so the UI can act on them
+        err.attemptsLeft = data.attemptsLeft;
+        err.locked = data.locked ?? false;
+        err.lockedUntil = data.lockedUntil ?? null;
+        err.status = response.status;
+        throw err;
       }
       return data;
     } catch (error: any) {

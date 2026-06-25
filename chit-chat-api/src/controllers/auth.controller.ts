@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user';
 import { Session } from '../models/session';
-import { generateAndSendOtp, verifyOtpCode } from '../services/otp.service';
+import { generateAndSendOtp, verifyOtpCode, OtpVerifyResult } from '../services/otp.service';
 import { successResponse, errorResponse } from '../utils/response';
 import { ErrorMessages, SuccessMessages } from '../constants/errors';
 
@@ -29,49 +29,72 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
 export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   try {
     const { mobileNumber, email, otp } = req.body;
-    let isOtpValid = false;
     if (!mobileNumber && !email) {
       errorResponse(res, 400, ErrorMessages.AUTH.MISSING_FIELDS);
       return;
     }
-    isOtpValid = await verifyOtpCode(email || mobileNumber, otp);
-    if (isOtpValid) {
-      let user;
-      if (email) {
-        user = await User.findOne({ email });
-        if (!user) user = await User.create({ email });
-      } else if (mobileNumber) {
-        user = await User.findOne({ mobileNumber });
-        if (!user) user = await User.create({ mobileNumber });
-      }
-
-      if (!user) {
-        errorResponse(res, 500, ErrorMessages.AUTH.FAILED_USER_RESOLVE);
-        return;
-      }
-
-      // Generate JWT token
-      const JWT_SECRET = process.env.JWT_SECRET as string;
-      const token = jwt.sign({ id: user._id, role: 'user' }, JWT_SECRET, { expiresIn: '30d' });
-
-      // Save user session in DB
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30); // 30 days expiry
-
-      await Session.create({
-        userId: user._id,
-        userType: 'user',
-        token,
-        userAgent: req.headers['user-agent'],
-        ipAddress: req.ip || req.socket.remoteAddress,
-        isActive: true,
-        expiresAt
-      });
-
-      successResponse(res, 200, SuccessMessages.AUTH.OTP_VERIFIED, { token, user });
-    } else {
-      errorResponse(res, 400, ErrorMessages.AUTH.INVALID_OTP);
+    if (!otp) {
+      errorResponse(res, 400, ErrorMessages.AUTH.MISSING_FIELDS);
+      return;
     }
+
+    const result: OtpVerifyResult = await verifyOtpCode(email || mobileNumber, otp);
+
+    if (result.locked) {
+      res.status(423).json({
+        success: false,
+        message: ErrorMessages.AUTH.OTP_LOCKED,
+        attemptsLeft: 0,
+        locked: true,
+        lockedUntil: result.lockedUntil,
+      });
+      return;
+    }
+
+    if (!result.valid) {
+      res.status(400).json({
+        success: false,
+        message: ErrorMessages.AUTH.INVALID_OTP,
+        attemptsLeft: result.attemptsLeft,
+        locked: false,
+      });
+      return;
+    }
+
+    // OTP valid — find or create user
+    let user;
+    if (email) {
+      user = await User.findOne({ email });
+      if (!user) user = await User.create({ email });
+    } else if (mobileNumber) {
+      user = await User.findOne({ mobileNumber });
+      if (!user) user = await User.create({ mobileNumber });
+    }
+
+    if (!user) {
+      errorResponse(res, 500, ErrorMessages.AUTH.FAILED_USER_RESOLVE);
+      return;
+    }
+
+    // Generate JWT token
+    const JWT_SECRET = process.env.JWT_SECRET as string;
+    const token = jwt.sign({ id: user._id, role: 'user' }, JWT_SECRET, { expiresIn: '30d' });
+
+    // Save user session in DB
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days expiry
+
+    await Session.create({
+      userId: user._id,
+      userType: 'user',
+      token,
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip || req.socket.remoteAddress,
+      isActive: true,
+      expiresAt
+    });
+
+    successResponse(res, 200, SuccessMessages.AUTH.OTP_VERIFIED, { token, user });
   } catch (error) {
     errorResponse(res, 500, ErrorMessages.AUTH.OTP_VERIFY_FAILED, error);
   }

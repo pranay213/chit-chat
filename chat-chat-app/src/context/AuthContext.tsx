@@ -227,7 +227,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setupSocketListeners(socket);
     } catch (err: any) {
       setError(err.message || 'OTP verification failed. Please try again.');
-      throw err;
+      throw err; // Re-throw original so callers get attemptsLeft / locked fields
     } finally {
       setIsLoading(false);
     }

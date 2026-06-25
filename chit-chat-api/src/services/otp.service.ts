@@ -66,15 +66,50 @@ export const generateAndSendOtp = async (identifier: string, type: 'email' | 'mo
   }
   return otpCode;
 };
+const MAX_ATTEMPTS = 3;
+const LOCK_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+
+export interface OtpVerifyResult {
+  valid: boolean;
+  locked: boolean;
+  attemptsLeft: number;
+  lockedUntil: Date | null;
+}
+
 /**
  * Verifies if the provided OTP matches the one in the database for the given identifier.
+ * Tracks failed attempts; locks the OTP record after MAX_ATTEMPTS incorrect guesses.
  */
-export const verifyOtpCode = async (identifier: string, otp: string): Promise<boolean> => {
-  const record = await Otp.findOne({ identifier, otp });
-  if (record) {
-    // Optionally delete the OTP after successful verification so it can't be reused
-    await Otp.deleteOne({ _id: record._id });
-    return true;
+export const verifyOtpCode = async (identifier: string, otp: string): Promise<OtpVerifyResult> => {
+  // Find the most recent OTP record for this identifier (regardless of value to check lock)
+  const record = await Otp.findOne({ identifier }).sort({ createdAt: -1 });
+
+  if (!record) {
+    return { valid: false, locked: false, attemptsLeft: MAX_ATTEMPTS, lockedUntil: null };
   }
-  return false;
+
+  // Check if currently locked
+  if (record.lockedUntil && record.lockedUntil > new Date()) {
+    return { valid: false, locked: true, attemptsLeft: 0, lockedUntil: record.lockedUntil };
+  }
+
+  // Check if OTP matches
+  if (record.otp === otp) {
+    await Otp.deleteOne({ _id: record._id });
+    return { valid: true, locked: false, attemptsLeft: MAX_ATTEMPTS, lockedUntil: null };
+  }
+
+  // Wrong OTP — increment failed attempts
+  const newAttempts = (record.failedAttempts || 0) + 1;
+  const attemptsLeft = Math.max(0, MAX_ATTEMPTS - newAttempts);
+
+  if (newAttempts >= MAX_ATTEMPTS) {
+    // Lock the record
+    const lockedUntil = new Date(Date.now() + LOCK_DURATION_MS);
+    await Otp.updateOne({ _id: record._id }, { failedAttempts: newAttempts, lockedUntil });
+    return { valid: false, locked: true, attemptsLeft: 0, lockedUntil };
+  }
+
+  await Otp.updateOne({ _id: record._id }, { failedAttempts: newAttempts });
+  return { valid: false, locked: false, attemptsLeft, lockedUntil: null };
 };
