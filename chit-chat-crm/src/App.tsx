@@ -261,6 +261,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ users: 0, roles: 0 });
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -316,7 +317,7 @@ const Dashboard = () => {
             </thead>
             <tbody>
               {users.map((u: any) => (
-                <tr key={u._id}>
+                <tr key={u._id} onClick={() => navigate(`/users?search=${u.email || u.mobileNumber || u.username}`)} style={{ cursor: 'pointer' }} title="View details in User Management">
                   <td>
                     <div className="user-profile">
                       <div className="user-avatar" style={{ width: '30px', height: '30px', fontSize: '12px' }}>
