@@ -15,7 +15,7 @@ const maskString = (str: string) => {
 export const getSettings = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const settings = await Setting.findOne();
-    let settingsData = settings ? settings.toObject() : {};
+    let settingsData: any = settings ? settings.toObject() : {};
 
     if (settingsData.smsGatewayApiKey) settingsData.smsGatewayApiKey = maskString(settingsData.smsGatewayApiKey);
     if (settingsData.cloudinaryApiKey) settingsData.cloudinaryApiKey = maskString(settingsData.cloudinaryApiKey);

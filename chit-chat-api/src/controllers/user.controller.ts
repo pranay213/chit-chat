@@ -48,7 +48,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     const populate = [{ path: 'country', select: 'name code dialCode flagUrl emoji' }];
     
     // Handle 'search' param mapping it to actual DB fields
-    const query = { limit: 200, ...req.query };
+    const query: any = { limit: 200, ...req.query };
     if (query.search) {
       const searchTerm = query.search as string;
       query.$or = [
@@ -60,6 +60,17 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     }
 
     const paginatedUsers = await executePaginatedQuery(User, query, populate);
+    
+    // Force Ollama bot to ALWAYS appear online
+    if (paginatedUsers.data && Array.isArray(paginatedUsers.data)) {
+      paginatedUsers.data = paginatedUsers.data.map((user: any) => {
+        if (user.username === 'ollama_bot') {
+          return { ...user, status: 'online' };
+        }
+        return user;
+      });
+    }
+
     successResponse(res, 200, SuccessMessages.USER.RETRIEVED, paginatedUsers);
   } catch (error) {
     logger.error(LoggerMessages.GET_USERS_ERROR(error));

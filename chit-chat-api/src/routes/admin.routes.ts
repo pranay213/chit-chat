@@ -8,6 +8,7 @@ import { createUser, getUsers, getUserById, updateUser, deleteUser } from '../co
 import { authenticateAdmin, requireSuperAdmin } from '../middlewares/admin.middleware';
 
 const router = Router();
+import { uploadFile, uploadMiddleware } from '../controllers/upload.controller';
 
 // Admin Dashboard Route (Placeholder)
 router.get('/dashboard', (req: Request, res: Response) => {
@@ -19,6 +20,9 @@ router.post('/login', loginAdmin);
 
 // Admin CRUD Operations (Protected)
 router.use(authenticateAdmin);
+
+// File Upload
+router.post('/upload', uploadMiddleware, uploadFile);
 
 // These static routes MUST be defined before /:id routes
 // System Settings (Protected & SUPER_ADMIN only)
