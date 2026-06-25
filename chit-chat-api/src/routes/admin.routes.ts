@@ -20,6 +20,11 @@ router.post('/login', loginAdmin);
 // Admin CRUD Operations (Protected)
 router.use(authenticateAdmin);
 
+// These static routes MUST be defined before /:id routes
+// System Settings (Protected & SUPER_ADMIN only)
+router.get('/settings', requireSuperAdmin, getSettings);
+router.put('/settings', requireSuperAdmin, updateSettings);
+
 router.post('/', requireSuperAdmin, createAdmin);
 router.get('/', requireSuperAdmin, getAdmins);
 router.put('/:id', requireSuperAdmin, updateAdmin);
@@ -31,10 +36,6 @@ router.get('/users', getUsers);
 router.get('/users/:id', getUserById);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
-
-// System Settings (Protected & SUPER_ADMIN only)
-router.get('/settings', requireSuperAdmin, getSettings);
-router.put('/settings', requireSuperAdmin, updateSettings);
 
 // Dynamic Role Management
 router.post('/roles', requireSuperAdmin, createRole);
