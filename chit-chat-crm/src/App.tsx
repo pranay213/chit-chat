@@ -428,6 +428,7 @@ const UsersPage = () => {
                   <th>ID</th>
                   <th>Identifier</th>
                   <th>Username</th>
+                  <th>Push Token</th>
                   <th>Status</th>
                   <th>Account</th>
                   <th>Joined</th>
@@ -440,6 +441,9 @@ const UsersPage = () => {
                     <td>{u._id.substring(0, 8)}...</td>
                     <td>{u.email || u.mobileNumber}</td>
                     <td>{u.username || '-'}</td>
+                    <td title={u.pushToken || 'No Token'} style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {u.pushToken ? u.pushToken : <span style={{ color: 'var(--text-muted)' }}>-</span>}
+                    </td>
                     <td><span className={`badge ${u.status === 'online' ? 'badge-success' : 'badge-warning'}`}>{u.status || 'offline'}</span></td>
                     <td><span className={`badge ${u.accountStatus === 'blocked' ? 'badge-danger' : 'badge-primary'}`}>{u.accountStatus || 'active'}</span></td>
                     <td>{new Date(u.createdAt).toLocaleDateString()}</td>
