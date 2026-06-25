@@ -178,6 +178,30 @@ export const api = {
   },
 
   /**
+   * Update the user's Expo push token
+   */
+  async updatePushToken(token: string, pushToken: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/push-token`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ pushToken }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Push token update failed');
+      }
+      return data;
+    } catch (error: any) {
+      console.error('API Error (updatePushToken):', error);
+      throw error;
+    }
+  },
+
+  /**
    * Check if username is available
    */
   async checkUsernameAvailability(username: string, token: string): Promise<any> {

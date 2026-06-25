@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import { sendOtp, verifyOtp, updateProfile, loginWithPassword, checkUsernameAvailability, getProfile } from '../controllers/auth.controller';
+import { sendOtp, verifyOtp, updateProfile, loginWithPassword, checkUsernameAvailability, getProfile, updatePushToken } from '../controllers/auth.controller';
 import { getUserChats, getChatMessages, createGroupChat, updateChatDetails, updateMessage, createOrGetChat, deleteChat, deleteMultipleChats } from '../controllers/chat.controller';
 import { getUsers } from '../controllers/user.controller';
 import { getMySessionsMobile, revokeSession, revokeOtherSessionsMobile } from '../controllers/session.controller';
@@ -22,6 +22,7 @@ router.post('/auth/login', loginWithPassword);
 router.get('/auth/check-username/:username', authenticateUser, checkUsernameAvailability);
 router.get('/auth/profile/:userId', authenticateUser, getProfile);
 router.put('/auth/profile/:userId', authenticateUser, updateProfile);
+router.put('/auth/push-token', authenticateUser, updatePushToken);
 router.get('/users', authenticateUser, getUsers);
 
 // Chat Routes

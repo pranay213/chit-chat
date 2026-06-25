@@ -145,20 +145,44 @@ export default function SettingsScreen() {
 
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  const handleSelectAndUploadImage = async () => {
+  const handleSelectAndUploadImage = () => {
+    Alert.alert(
+      'Profile Photo',
+      'Choose an option',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Take Photo', onPress: () => pickProfileImage(true) },
+        { text: 'Choose from Gallery', onPress: () => pickProfileImage(false) },
+      ]
+    );
+  };
+
+  const pickProfileImage = async (useCamera: boolean) => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'We need access to your photo library to set your profile picture.');
-        return;
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Denied', 'We need access to your camera to take a profile picture.');
+          return;
+        }
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Denied', 'We need access to your photo library to set your profile picture.');
+          return;
+        }
       }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
+      const options: ImagePicker.ImagePickerOptions = {
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
-      });
+      };
+
+      const result = useCamera
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
 
       if (!result.canceled && result.assets && result.assets[0].uri) {
         setUploadingImage(true);

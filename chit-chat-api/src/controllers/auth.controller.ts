@@ -229,3 +229,30 @@ export const checkUsernameAvailability = async (req: Request, res: Response): Pr
     errorResponse(res, 500, ErrorMessages.AUTH.USERNAME_CHECK_FAILED, error);
   }
 };
+
+export const updatePushToken = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user.id;
+    const { pushToken } = req.body;
+
+    if (!pushToken) {
+      errorResponse(res, 400, 'Push token is required', {});
+      return;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { pushToken },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      errorResponse(res, 404, ErrorMessages.AUTH.USER_NOT_FOUND, {});
+      return;
+    }
+
+    successResponse(res, 200, 'Push token updated successfully', { user: updatedUser });
+  } catch (error) {
+    errorResponse(res, 500, ErrorMessages.SYSTEM.SERVER_ERROR, error);
+  }
+};

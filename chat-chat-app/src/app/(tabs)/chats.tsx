@@ -15,9 +15,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useAuth } from '../../context/AuthContext';
 import { api, API_BASE_URL } from '../../services/api';
 import { getSocket } from '../../services/socket';
+import ChatSkeleton from '../../components/ui/ChatSkeleton';
 
 interface ChatMessage {
   _id: string;
@@ -74,6 +76,7 @@ export default function ChatsScreen() {
 
   const handleLongPress = (chatId: string) => {
     if (!isSelectionMode) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setIsSelectionMode(true);
       setSelectedChats([chatId]);
     }
@@ -528,9 +531,7 @@ export default function ChatsScreen() {
 
       {/* Chats List */}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#7E57C2" />
-        </View>
+        <ChatSkeleton rowCount={8} showStories={false} />
       ) : (
         <FlatList
           data={filteredChats}

@@ -4,6 +4,9 @@ import { useEffect } from 'react';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import * as Notifications from 'expo-notifications';
+import { registerForPushNotificationsAsync, setupNotificationCategories } from '../services/notifications';
+import { getSocket } from '../services/socket';
 
 function RootLayoutNav() {
   const { token, isLoading } = useAuth();
@@ -12,6 +15,11 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (isLoading) return;
+
+    if (token) {
+      setupNotificationCategories();
+      registerForPushNotificationsAsync(token);
+    }
 
     const inAuthGroup = 
       segments[0] === 'login' || 
@@ -32,6 +40,42 @@ function RootLayoutNav() {
       router.replace('/chats');
     }
   }, [token, segments, isLoading]);
+
+  useEffect(() => {
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      const actionIdentifier = response.actionIdentifier;
+      const data = response.notification.request.content.data;
+      
+      // Handle Smart Reply
+      if (actionIdentifier === 'QUICK_REPLY' && data?.chatId) {
+        const replyText = (response as any).userText;
+        if (replyText) {
+          const socket = getSocket();
+          if (socket) {
+            socket.emit('sendMessage', {
+              chatId: data.chatId,
+              text: replyText
+            });
+          }
+        }
+      } else if (actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER && data?.chatId) {
+        // Navigate to chat on tap
+        router.push({
+          pathname: '/chat/[id]',
+          params: {
+            id: data.chatId,
+            chatName: response.notification.request.content.title || 'Chat',
+            isGroup: 'false', // Assuming it's not a group, or we need to pass this in payload
+            isOnline: 'false'
+          }
+        });
+      }
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(responseListener);
+    };
+  }, []);
 
   if (isLoading) {
     return (

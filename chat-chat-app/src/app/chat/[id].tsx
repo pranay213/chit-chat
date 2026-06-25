@@ -11,12 +11,17 @@ import {
   Platform, 
   ActivityIndicator, 
   ImageBackground,
-  Animated
+  Animated,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as Haptics from 'expo-haptics';
+import { Audio } from 'expo-av';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { getSocket } from '../../services/socket';
@@ -114,6 +119,9 @@ export default function ChatScreen() {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [typingUser, setTypingUser] = useState('');
 
   const flatListRef = useRef<FlatList>(null);
@@ -207,6 +215,8 @@ export default function ChatScreen() {
   const handleSend = () => {
     if (!inputText.trim()) return;
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     const textToSend = inputText;
     setInputText('');
 
@@ -232,6 +242,118 @@ export default function ChatScreen() {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
+  };
+
+  const handleAttachMedia = () => {
+    Alert.alert(
+      'Attach Media',
+      'Choose the type of media to send',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Photo Library', onPress: () => pickImage(false) },
+        { text: 'Document', onPress: pickDocument },
+      ]
+    );
+  };
+
+  const handleCamera = () => {
+    pickImage(true);
+  };
+
+  const pickImage = async (useCamera: boolean) => {
+    try {
+      const result = useCamera 
+        ? await ImagePicker.launchCameraAsync({ quality: 0.7 })
+        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
+
+      if (!result.canceled && result.assets && result.assets[0].uri) {
+        uploadAndSendMedia(result.assets[0].uri, 'image', result.assets[0].fileName || 'photo.jpg');
+      }
+    } catch (err) {
+      console.log('Error picking image:', err);
+    }
+  };
+
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({});
+      if (result.canceled === false && result.assets && result.assets[0].uri) {
+        uploadAndSendMedia(result.assets[0].uri, 'file', result.assets[0].name);
+      }
+    } catch (err) {
+      console.log('Error picking document:', err);
+    }
+  };
+
+  const uploadAndSendMedia = async (uri: string, type: 'image' | 'file', fileName: string) => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const uploadRes = await api.uploadMedia(uri, token);
+      const data = uploadRes.data || uploadRes;
+      
+      if (data.success && data.url) {
+        if (socket) {
+          socket.emit('sendMessage', {
+            chatId: chatId.toString(),
+            attachments: [{
+              type,
+              url: data.url,
+              name: fileName,
+            }]
+          });
+        }
+      }
+    } catch (err) {
+      Alert.alert('Upload Failed', 'Failed to upload media file.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const perm = await Audio.requestPermissionsAsync();
+      if (perm.status === 'granted') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setIsRecording(true);
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+        const { recording } = await Audio.Recording.createAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+        setRecording(recording);
+      }
+    } catch (err) {
+      console.error('Failed to start recording', err);
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = async () => {
+    setIsRecording(false);
+    if (!recording) return;
+    try {
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      setRecording(null);
+      if (uri) {
+        uploadAndSendMedia(uri, 'audio', 'voice-message.m4a');
+      }
+    } catch (error) {
+      console.error('Failed to stop recording', error);
+    }
+  };
+
+  const playSound = async (uri: string) => {
+    if (sound) {
+      await sound.unloadAsync();
+    }
+    const { sound: newSound } = await Audio.Sound.createAsync({ uri });
+    setSound(newSound);
+    await newSound.playAsync();
   };
 
   const handleTyping = (text: string) => {
@@ -442,21 +564,59 @@ export default function ChatScreen() {
                 }
 
                 if (item.attachments && item.attachments.length > 0) {
-                  // Render Attachment (PDF)
-                  const pdf = item.attachments[0];
+                  const attachment = item.attachments[0];
+                  
+                  if (attachment.type === 'audio') {
+                    return (
+                      <View style={[styles.messageBubble, isMe ? styles.outgoingBubble : styles.incomingBubble, { maxWidth: '75%' }]}>
+                        {!isMe && isGroup && (
+                          <Text style={[styles.senderName, { color: getParticipantColor(item.senderId.displayName) }]}>
+                            {item.senderId.displayName}
+                          </Text>
+                        )}
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <TouchableOpacity onPress={() => playSound(attachment.url!)}>
+                            <Ionicons name="play-circle" size={36} color={isMe ? "#FFF" : "#7E57C2"} />
+                          </TouchableOpacity>
+                          <Text style={{ marginLeft: 8, color: isMe ? "#FFF" : "#333", fontStyle: 'italic' }}>
+                            Voice Message
+                          </Text>
+                        </View>
+                        <Text style={styles.attachmentTime}>{formatMessageTime(item.createdAt)}</Text>
+                      </View>
+                    );
+                  }
+
+                  if (attachment.type === 'image') {
+                    return (
+                      <View style={[styles.messageBubble, isMe ? styles.outgoingBubble : styles.incomingBubble, { maxWidth: '75%', padding: 4 }]}>
+                        {!isMe && isGroup && (
+                          <Text style={[styles.senderName, { color: getParticipantColor(item.senderId.displayName), marginLeft: 4 }]}>
+                            {item.senderId.displayName}
+                          </Text>
+                        )}
+                        <Image source={{ uri: attachment.url }} style={{ width: 220, height: 220, borderRadius: 8 }} />
+                        <Text style={[styles.attachmentTime, { marginRight: 4 }]}>{formatMessageTime(item.createdAt)}</Text>
+                      </View>
+                    );
+                  }
+
+                  // Render Attachment (PDF/File)
                   return (
-                    <View style={[styles.messageBubble, styles.incomingBubble, { maxWidth: '75%' }]}>
-                      <Text style={[styles.senderName, { color: getParticipantColor(item.senderId.displayName) }]}>
-                        {item.senderId.displayName}
-                      </Text>
+                    <View style={[styles.messageBubble, isMe ? styles.outgoingBubble : styles.incomingBubble, { maxWidth: '75%' }]}>
+                      {!isMe && isGroup && (
+                        <Text style={[styles.senderName, { color: getParticipantColor(item.senderId.displayName) }]}>
+                          {item.senderId.displayName}
+                        </Text>
+                      )}
                       <View style={styles.pdfContainer}>
                         <View style={styles.pdfIconContainer}>
                           <Ionicons name="document-text" size={24} color="#FFF" />
-                          <Text style={styles.pdfIconBadgeText}>PDF</Text>
+                          <Text style={styles.pdfIconBadgeText}>FILE</Text>
                         </View>
                         <View style={styles.pdfMeta}>
-                          <Text style={styles.pdfName} numberOfLines={1}>{pdf.name}</Text>
-                          <Text style={styles.pdfSize}>{pdf.size || 'Unknown size'}</Text>
+                          <Text style={styles.pdfName} numberOfLines={1}>{attachment.name}</Text>
+                          <Text style={styles.pdfSize}>{attachment.size || 'Unknown size'}</Text>
                         </View>
                       </View>
                       <Text style={styles.attachmentTime}>{formatMessageTime(item.createdAt)}</Text>
@@ -506,31 +666,40 @@ export default function ChatScreen() {
               <Ionicons name="happy-outline" size={24} color="#666" />
             </TouchableOpacity>
             
-            <TextInput
-              style={styles.textInput}
-              placeholder="Type a message..."
-              placeholderTextColor="#999"
-              multiline
-              value={inputText}
-              onChangeText={handleTyping}
-              onSubmitEditing={handleSend}
-              blurOnSubmit={false}
-              returnKeyType="send"
-            />
+            {isRecording ? (
+              <View style={[styles.textInput, { justifyContent: 'center', backgroundColor: '#FFEBEE' }]}>
+                <Text style={{ color: '#D32F2F', fontWeight: 'bold' }}>Recording... Release to send</Text>
+              </View>
+            ) : (
+              <TextInput
+                style={styles.textInput}
+                placeholder="Type a message..."
+                placeholderTextColor="#999"
+                multiline
+                value={inputText}
+                onChangeText={handleTyping}
+                onSubmitEditing={handleSend}
+                blurOnSubmit={false}
+                returnKeyType="send"
+              />
+            )}
             
-            <TouchableOpacity style={styles.inputIconBtn}>
+            <TouchableOpacity style={styles.inputIconBtn} onPress={handleAttachMedia} disabled={isRecording}>
               <Ionicons name="attach-outline" size={24} color="#666" />
             </TouchableOpacity>
 
             {inputText.length === 0 && (
-              <TouchableOpacity style={styles.inputIconBtn}>
+              <TouchableOpacity style={styles.inputIconBtn} onPress={handleCamera}>
                 <Ionicons name="camera-outline" size={24} color="#666" />
               </TouchableOpacity>
             )}
 
             <TouchableOpacity 
-              style={styles.sendBtn}
-              onPress={handleSend}
+              style={[styles.sendBtn, isRecording && { backgroundColor: '#D32F2F', transform: [{ scale: 1.2 }] }]}
+              onPress={inputText.length > 0 ? handleSend : undefined}
+              onPressIn={inputText.length === 0 ? startRecording : undefined}
+              onPressOut={inputText.length === 0 ? stopRecording : undefined}
+              delayPressIn={0}
             >
               <Ionicons 
                 name={inputText.length > 0 ? "send" : "mic"} 

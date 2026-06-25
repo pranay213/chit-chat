@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, ScrollView } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useAuth } from '../context/AuthContext';
 
 const MAX_ATTEMPTS = 3;
@@ -120,6 +121,7 @@ export default function VerifyScreen() {
       const locked: boolean = err.locked === true || err.status === 423;
 
       triggerShake();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       clearCode();
 
       if (locked) {

@@ -1,0 +1,19 @@
+dont push any code now 
+1. in chat screen when new messag is appear update  via skeleton effect not loading efffect 
+2. now start implement notifications  
+3. from the notification we can give smart reply
+4.in notificatoion  for gorups and  persons all should sendable  
+5. in notifiaction we should able to see the images as well
+6. in chat i need to send files and images and capture photo . 
+7. in profile setting i need eithter upload image or capture and upload image option should implement
+8. voice call full implemnetatoin two party sides  all options should be workable 
+9. video call full implemnetatoin two party sides  all options should be workable 
+10 .other notification managemen of the app should be implmented  type of color notification like that 
+11. vibration feedback should implemented also 
+12.default  ringtone and customized ringtone when notifiction or calls comes to picture
+13. implement voice chat also  and make it be workable
+14.location sharing  continuso sharing for hours should also to be workable   
+
+
+now give all requirments of crm please 
+for manage users messages  users management   

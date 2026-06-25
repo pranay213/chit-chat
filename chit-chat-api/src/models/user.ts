@@ -13,6 +13,7 @@ export interface IUser extends Document {
   status: 'online' | 'offline';
   accountStatus: 'active' | 'inactive' | 'blocked';
   lastSeen: Date;
+  pushToken?: string;
 }
 const userSchema = new Schema<IUser>(
   {
@@ -29,6 +30,7 @@ const userSchema = new Schema<IUser>(
     status: { type: String, enum: ['online', 'offline'], default: 'offline' },
     accountStatus: { type: String, enum: ['active', 'inactive', 'blocked'], default: 'active' },
     lastSeen: { type: Date, default: Date.now },
+    pushToken: { type: String },
   },
   { timestamps: true }
 );

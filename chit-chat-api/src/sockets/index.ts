@@ -9,6 +9,7 @@ import { ErrorMessages } from '../constants/errors';
 import logger from '../utils/logger';
 import { generateOllamaResponse } from '../services/ollama.service';
 import { LoggerMessages } from "../constants/loggerMessages";
+import { sendPushNotification } from '../services/push.service';
 
 // In-memory active connections mapping (userId -> Set of active socketIds)
 const onlineUsers = new Map<string, Set<string>>();
@@ -230,6 +231,36 @@ export const setupSockets = (io: Server) => {
             }
           } catch (ollamaErr) {
             logger.error(LoggerMessages.OLLAMA_CHATBOT_ERROR(ollamaErr));
+          }
+
+          // --- Push Notifications ---
+          try {
+            const chat = await Chat.findById(chatId).populate('participants', 'pushToken').lean();
+            if (chat) {
+              const tokens = (chat.participants as any[])
+                .filter(p => p._id.toString() !== userId && p.pushToken)
+                .map(p => p.pushToken);
+
+              if (tokens.length > 0) {
+                let bodyStr = text || 'New message';
+                if (attachments && attachments.length > 0) {
+                  bodyStr = attachments[0].type === 'image' ? '📷 Photo' : '📎 Attachment';
+                }
+
+                await sendPushNotification({
+                  to: tokens,
+                  title: chat.isGroup ? `${socket.data.userProfile?.displayName || 'User'} in ${chat.groupName}` : socket.data.userProfile?.displayName || 'User',
+                  body: bodyStr,
+                  categoryId: 'CHAT_MESSAGE',
+                  data: {
+                    chatId,
+                    senderId: userId,
+                  }
+                });
+              }
+            }
+          } catch (pushErr) {
+            logger.error(`Failed to trigger push notification: ${pushErr}`);
           }
         }).catch(err => logger.error(LoggerMessages.ERROR_PERSISTING_MESSAGE_CHAT_STATUS(err)));
 
