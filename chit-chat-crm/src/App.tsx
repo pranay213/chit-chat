@@ -127,9 +127,11 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const res = await axios.post(`${API_URL}/login`, { email, password });
-      if (res.data.data?.token) {
-        localStorage.setItem('adminToken', res.data.data.token);
+      if (res.data?.token) {
+        localStorage.setItem('adminToken', res.data.token);
         navigate('/');
+      } else {
+        setError('Login failed: Token not provided');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
