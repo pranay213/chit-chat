@@ -47,19 +47,37 @@ export const generateAndSendOtp = async (identifier: string, type: 'email' | 'mo
        logger.warn(LoggerMessages.SMS_GATEWAY_API_KEY_IS_NOT_CONFIGURED_IN_SETTINGS);
        return otpCode;
     }
+    // Normalize phone number: strip leading +91 or 91 country code so the
+    // Android native SMS module receives a plain 10-digit local number.
+    // The whitelist in the SMS gateway CRM must store numbers in the same format.
+    const normalizePhone = (num: string): string => {
+      let n = num.replace(/\s+/g, '').replace(/-/g, ''); // strip spaces/dashes
+      if (n.startsWith('+91')) n = n.slice(3);
+      else if (n.startsWith('91') && n.length === 12) n = n.slice(2);
+      return n;
+    };
+    const normalizedTo = normalizePhone(identifier);
     try {
-      await axios.post('https://sms-gate-way.onrender.com/api/v1/messages', {
-        to: identifier,
-        message: `Your OTP for login is ${otpCode}. It is valid for 5 minutes.`,
-        channel: 'sms'
-      }, {
-        headers: {
-          'x-api-key': settings.smsGatewayApiKey,
-          'Content-Type': 'application/json'
+      const gatewayResponse = await axios.post(
+        'https://sms-gate-way.onrender.com/api/v1/messages',
+        {
+          to: normalizedTo,
+          message: `Your OTP for login is ${otpCode}. It is valid for 5 minutes.`,
+          channel: 'sms'
+        },
+        {
+          headers: {
+            'x-api-key': settings.smsGatewayApiKey,
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000 // 10s — prevents hanging on Render cold-start
         }
-      });
-      logger.info(LoggerMessages.SMS_SERVICE_OTP_SENT_SUCCESSFULLY_TO_MOBILE(identifier));
-    } catch (error) {
+      );
+      logger.info(LoggerMessages.SMS_SERVICE_OTP_SENT_SUCCESSFULLY_TO_MOBILE(normalizedTo));
+      logger.info(`SMS Gateway response: ${JSON.stringify(gatewayResponse.data)}`);
+    } catch (error: any) {
+      const gatewayError = error?.response?.data || error?.message || error;
+      logger.error(`SMS Gateway error for ${normalizedTo}: ${JSON.stringify(gatewayError)}`);
       logger.error(LoggerMessages.FAILED_TO_SEND_MOBILE_OTP(error));
       throw new Error('Failed to send mobile OTP via SMS Gateway');
     }
