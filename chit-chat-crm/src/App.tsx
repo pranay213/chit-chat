@@ -721,7 +721,7 @@ const ChatPreviewPage = () => {
                           if(window.confirm('Are you sure you want to delete this chat thread globally?')) {
                             axios.delete(`${API_URL}/chats/${chat._id}`)
                               .then(() => fetchChats())
-                              .catch(err => alert('Failed to delete chat'));
+                              .catch(() => alert('Failed to delete chat'));
                           }
                         }}
                         style={{ padding: '4px 8px', fontSize: '0.75rem', background: 'var(--danger)', marginLeft: '8px' }}
