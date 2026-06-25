@@ -46,10 +46,19 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const populate = [{ path: 'country', select: 'name code dialCode flagUrl emoji' }];
-    const query = {
-      limit: 200, // Return up to 200 users by default
-      ...req.query
-    };
+    
+    // Handle 'search' param mapping it to actual DB fields
+    const query = { limit: 200, ...req.query };
+    if (query.search) {
+      const searchTerm = query.search as string;
+      query.$or = [
+        { username: { $regex: searchTerm, $options: 'i' } },
+        { email: { $regex: searchTerm, $options: 'i' } },
+        { mobileNumber: { $regex: searchTerm, $options: 'i' } }
+      ];
+      delete query.search;
+    }
+
     const paginatedUsers = await executePaginatedQuery(User, query, populate);
     successResponse(res, 200, SuccessMessages.USER.RETRIEVED, paginatedUsers);
   } catch (error) {

@@ -41,7 +41,10 @@ export const parseQueryParams = (reqQuery: any): ParsedQuery => {
   Object.keys(queryObj).forEach(key => {
     const val = queryObj[key];
 
-    if (typeof val === 'object' && val !== null && !(val instanceof mongoose.Types.ObjectId)) {
+    if (key.startsWith('$')) {
+      // Direct pass-through for native MongoDB operators like $or, $and
+      filter[key] = val;
+    } else if (typeof val === 'object' && val !== null && !(val instanceof mongoose.Types.ObjectId)) {
       const fieldFilter: any = {};
       Object.keys(val).forEach(operator => {
         const opVal = val[operator];
