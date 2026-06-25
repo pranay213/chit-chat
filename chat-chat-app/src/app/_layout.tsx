@@ -42,6 +42,15 @@ function RootLayoutNav() {
   }, [token, segments, isLoading]);
 
   useEffect(() => {
+    const receivedListener = Notifications.addNotificationReceivedListener(notification => {
+      console.log('====================================');
+      console.log('📬 NOTIFICATION RECEIVED IN FOREGROUND:');
+      console.log('Title:', notification.request.content.title);
+      console.log('Body:', notification.request.content.body);
+      console.log('Data:', notification.request.content.data);
+      console.log('====================================');
+    });
+
     const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
       const actionIdentifier = response.actionIdentifier;
       const data = response.notification.request.content.data;
@@ -73,6 +82,7 @@ function RootLayoutNav() {
     });
 
     return () => {
+      receivedListener.remove();
       responseListener.remove();
     };
   }, []);

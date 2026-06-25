@@ -23,7 +23,16 @@ export const sendPushNotification = async (pushToken: string | string[], title: 
   try {
     const chunks = expo.chunkPushNotifications(messages);
     for (const chunk of chunks) {
-      await expo.sendPushNotificationsAsync(chunk);
+      const tickets = await expo.sendPushNotificationsAsync(chunk);
+      console.log('Expo Push Tickets:', tickets);
+      for (const ticket of tickets) {
+        if (ticket.status === 'error') {
+          console.error(`Push notification error: ${ticket.message}`);
+          if (ticket.details && ticket.details.error) {
+            console.error(`Error code: ${ticket.details.error}`);
+          }
+        }
+      }
     }
     return true;
   } catch (error) {
