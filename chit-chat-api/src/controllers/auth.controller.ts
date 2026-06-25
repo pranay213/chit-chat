@@ -98,7 +98,7 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
       errorResponse(res, 404, ErrorMessages.AUTH.USER_NOT_FOUND);
       return;
     }
-    successResponse(res, 200, 'Profile fetched', { user });
+    successResponse(res, 200, SuccessMessages.AUTH.PROFILE_FETCHED, { user });
   } catch (error) {
     errorResponse(res, 500, ErrorMessages.SYSTEM.SERVER_ERROR, error);
   }
@@ -198,7 +198,7 @@ export const checkUsernameAvailability = async (req: Request, res: Response): Pr
     const currentUserId = (req as any).user.id;
 
     if (!username || username.trim().length < 3) {
-      errorResponse(res, 400, 'Username must be at least 3 characters long');
+      errorResponse(res, 400, ErrorMessages.AUTH.USERNAME_TOO_SHORT);
       return;
     }
 
@@ -209,11 +209,11 @@ export const checkUsernameAvailability = async (req: Request, res: Response): Pr
     });
 
     if (existingUser) {
-      successResponse(res, 200, 'Username is taken', { available: false });
+      successResponse(res, 200, SuccessMessages.AUTH.USERNAME_TAKEN, { available: false });
     } else {
-      successResponse(res, 200, 'Username is available', { available: true });
+      successResponse(res, 200, SuccessMessages.AUTH.USERNAME_AVAILABLE, { available: true });
     }
   } catch (error) {
-    errorResponse(res, 500, 'Failed to check username availability', error);
+    errorResponse(res, 500, ErrorMessages.AUTH.USERNAME_CHECK_FAILED, error);
   }
 };

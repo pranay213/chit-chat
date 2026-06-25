@@ -5,6 +5,7 @@ import { Chat } from '../models/chat';
 import { successResponse, errorResponse } from '../utils/response';
 import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import logger from '../utils/logger';
+import { LoggerMessages } from "../constants/loggerMessages";
 
 // Custom request interface with user context from auth middleware
 interface AuthenticatedRequest extends Request {
@@ -33,7 +34,7 @@ export const getCallLogs = async (req: any, res: Response): Promise<void> => {
 
     successResponse(res, 200, SuccessMessages.CALL_LOG.RETRIEVED, { logs });
   } catch (error) {
-    logger.error(`Get Call Logs error: ${error}`);
+    logger.error(LoggerMessages.GET_CALL_LOGS_ERROR(error));
     errorResponse(res, 500, ErrorMessages.SYSTEM.SERVER_ERROR, error);
   }
 };
@@ -99,7 +100,7 @@ export const createCallLog = async (req: any, res: Response): Promise<void> => {
 
     successResponse(res, 201, SuccessMessages.CALL_LOG.CREATED, { log: populatedLog });
   } catch (error) {
-    logger.error(`Create Call Log error: ${error}`);
+    logger.error(LoggerMessages.CREATE_CALL_LOG_ERROR(error));
     errorResponse(res, 500, ErrorMessages.SYSTEM.SERVER_ERROR, error);
   }
 };

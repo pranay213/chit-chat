@@ -5,6 +5,7 @@ import { executePaginatedQuery } from '../utils/queryParser';
 import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import logger from '../utils/logger';
 import { Server } from 'socket.io';
+import { LoggerMessages } from "../constants/loggerMessages";
 
 // List sessions (For Admin Panel)
 export const getSessionsAdmin = async (req: Request, res: Response): Promise<void> => {
@@ -16,7 +17,7 @@ export const getSessionsAdmin = async (req: Request, res: Response): Promise<voi
     const paginatedSessions = await executePaginatedQuery(Session, req.query, populate);
     successResponse(res, 200, SuccessMessages.SESSION.RETRIEVED, paginatedSessions);
   } catch (error) {
-    logger.error(`Get Sessions Admin error: ${error}`);
+    logger.error(LoggerMessages.GET_SESSIONS_ADMIN_ERROR(error));
     errorResponse(res, 500, ErrorMessages.SESSION.RETRIEVED_FAILED, error);
   }
 };
@@ -52,7 +53,7 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
       for (const socket of sockets) {
         const socketToken = socket.handshake.auth?.token || socket.handshake.query?.token;
         if (socketToken === session.token) {
-          logger.info(`Actively disconnecting socket for revoked session: ${session._id}`);
+          logger.info(LoggerMessages.ACTIVELY_DISCONNECTING_SOCKET_FOR_REVOKED_SESSION(session._id));
           socket.emit('sessionRevoked', { message: 'Session has been revoked by admin' });
           socket.disconnect(true);
         }
@@ -61,7 +62,7 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
 
     successResponse(res, 200, SuccessMessages.SESSION.REVOKED);
   } catch (error) {
-    logger.error(`Revoke Session error: ${error}`);
+    logger.error(LoggerMessages.REVOKE_SESSION_ERROR(error));
     errorResponse(res, 500, ErrorMessages.SESSION.REVOKED_FAILED, error);
   }
 };
@@ -83,7 +84,7 @@ export const getMySessionsMobile = async (req: Request, res: Response): Promise<
     });
     successResponse(res, 200, SuccessMessages.SESSION.MY_SESSIONS_RETRIEVED, { docs: mappedSessions });
   } catch (error) {
-    logger.error(`Get My Sessions Mobile error: ${error}`);
+    logger.error(LoggerMessages.GET_MY_SESSIONS_MOBILE_ERROR(error));
     errorResponse(res, 500, ErrorMessages.SESSION.RETRIEVED_FAILED, error);
   }
 };
@@ -109,7 +110,7 @@ export const revokeOtherSessionsMobile = async (req: Request, res: Response): Pr
       revokedCount: result.modifiedCount
     });
   } catch (error) {
-    logger.error(`Revoke Other Sessions Mobile error: ${error}`);
+    logger.error(LoggerMessages.REVOKE_OTHER_SESSIONS_MOBILE_ERROR(error));
     errorResponse(res, 500, ErrorMessages.SESSION.REVOKED_FAILED, error);
   }
 };

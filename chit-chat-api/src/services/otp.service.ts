@@ -3,6 +3,8 @@ import { Setting } from '../models/setting';
 import nodemailer from 'nodemailer';
 import axios from 'axios';
 import logger from '../utils/logger';
+import { LoggerMessages } from "../constants/loggerMessages";
+
 /**
  * Generates a random 6-digit OTP and saves it to the database.
  * Sends the OTP via email or SMS.
@@ -16,7 +18,7 @@ export const generateAndSendOtp = async (identifier: string, type: 'email' | 'mo
   const settings = await Setting.findOne();
   if (type === 'email') {
     if (!settings?.smtpHost || !settings?.smtpPort || !settings?.smtpUser || !settings?.smtpPass || !settings?.smtpFromEmail) {
-       logger.warn('SMTP credentials are not fully configured in settings.');
+       logger.warn(LoggerMessages.SMTP_CREDENTIALS_ARE_NOT_FULLY_CONFIGURED_IN);
        return otpCode;
     }
     const transporter = nodemailer.createTransport({
@@ -35,14 +37,14 @@ export const generateAndSendOtp = async (identifier: string, type: 'email' | 'mo
         subject: 'Your Login OTP',
         text: `Your OTP for login is ${otpCode}. It is valid for 5 minutes.`,
       });
-      logger.info(`[EMAIL SERVICE] OTP sent successfully to email: ${identifier}`);
+      logger.info(LoggerMessages.EMAIL_SERVICE_OTP_SENT_SUCCESSFULLY_TO_EMAIL(identifier));
     } catch (error) {
-      logger.error(`Failed to send email OTP: ${error}`);
+      logger.error(LoggerMessages.FAILED_TO_SEND_EMAIL_OTP(error));
       throw new Error('Failed to send email OTP');
     }
   } else if (type === 'mobile') {
     if (!settings?.smsGatewayApiKey) {
-       logger.warn('SMS Gateway API Key is not configured in settings.');
+       logger.warn(LoggerMessages.SMS_GATEWAY_API_KEY_IS_NOT_CONFIGURED_IN_SETTINGS);
        return otpCode;
     }
     try {
@@ -56,9 +58,9 @@ export const generateAndSendOtp = async (identifier: string, type: 'email' | 'mo
           'Content-Type': 'application/json'
         }
       });
-      logger.info(`[SMS SERVICE] OTP sent successfully to mobile: ${identifier}`);
+      logger.info(LoggerMessages.SMS_SERVICE_OTP_SENT_SUCCESSFULLY_TO_MOBILE(identifier));
     } catch (error) {
-      logger.error(`Failed to send mobile OTP: ${error}`);
+      logger.error(LoggerMessages.FAILED_TO_SEND_MOBILE_OTP(error));
       throw new Error('Failed to send mobile OTP via SMS Gateway');
     }
   }

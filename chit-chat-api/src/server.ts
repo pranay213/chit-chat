@@ -11,6 +11,8 @@ import apiRoutes from './routes';
 import { setupSockets } from './sockets';
 import logger from './utils/logger';
 import { setupSwagger } from './utils/swagger';
+import { LoggerMessages } from "./constants/loggerMessages";
+
 // Load environment variables
 dotenv.config();
 // Connect to Database
@@ -44,6 +46,6 @@ app.use('/api/v1', apiRoutes);
 // Start server
 const PORT = process.env.PORT as string;
 server.listen(PORT, () => {
-  logger.info(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  logger.info(LoggerMessages.SERVER_IS_RUNNING_IN_MODE_ON_PORT(process.env.NODE_ENV, PORT));
 });
 // Hot reload triggered for new env vars

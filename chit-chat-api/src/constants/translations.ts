@@ -23,6 +23,8 @@ export const translations: Record<string, Record<string, string>> = {
     'AUTH_OTP_SEND_FAILED': 'Failed to send OTP',
     'AUTH_OTP_VERIFY_FAILED': 'Failed to verify OTP',
     'AUTH_PROFILE_UPDATE_FAILED': 'Failed to update profile',
+    'AUTH_USERNAME_TOO_SHORT': 'Username must be at least 3 characters long',
+    'AUTH_USERNAME_CHECK_FAILED': 'Failed to check username availability',
     // Chat Errors
     'CHAT_NOT_FOUND': 'Chat not found',
     'CHAT_ID_REQUIRED': 'Chat ID is required',
@@ -32,6 +34,7 @@ export const translations: Record<string, Record<string, string>> = {
     'CHAT_UPDATED_FAILED': 'Failed to update chat details',
     'MESSAGE_UPDATED_FAILED': 'Failed to update message',
     'MESSAGE_NOT_FOUND': 'Message not found',
+    'CHAT_INVALID_CHAT_IDS': 'Invalid chatIds list',
     // System Errors
     'SYSTEM_SERVER_ERROR': 'Server Error during request',
     'SYSTEM_DB_FAILED': 'Database operation failed',
@@ -66,6 +69,9 @@ export const translations: Record<string, Record<string, string>> = {
     'AUTH_OTP_SENT': 'OTP sent successfully',
     'AUTH_OTP_VERIFIED': 'OTP verified successfully',
     'AUTH_PROFILE_UPDATED': 'Profile updated',
+    'AUTH_PROFILE_FETCHED': 'Profile fetched',
+    'AUTH_USERNAME_TAKEN': 'Username is taken',
+    'AUTH_USERNAME_AVAILABLE': 'Username is available',
     'ROLE_CREATED': 'Role created successfully',
     'ROLE_RETRIEVED': 'Roles retrieved successfully',
     'ROLE_UPDATED': 'Role updated successfully',

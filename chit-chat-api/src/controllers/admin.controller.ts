@@ -8,6 +8,7 @@ import { successResponse, errorResponse } from '../utils/response';
 import { executePaginatedQuery } from '../utils/queryParser';
 import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import logger from '../utils/logger';
+import { LoggerMessages } from "../constants/loggerMessages";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -48,7 +49,7 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
 
     successResponse(res, 200, SuccessMessages.AUTH.LOGIN_SUCCESS, { token, admin: adminData });
   } catch (error) {
-    logger.error(`Login error: ${error}`);
+    logger.error(LoggerMessages.LOGIN_ERROR(error));
     errorResponse(res, 500, ErrorMessages.ADMIN.LOGIN_FAILED, error);
   }
 };
@@ -78,7 +79,7 @@ export const createAdmin = async (req: Request, res: Response): Promise<void> =>
 
     successResponse(res, 201, SuccessMessages.ADMIN.CREATED, { admin: adminData });
   } catch (error) {
-    logger.error(`Create Admin error: ${error}`);
+    logger.error(LoggerMessages.CREATE_ADMIN_ERROR(error));
     errorResponse(res, 500, ErrorMessages.ADMIN.CREATED_FAILED, error);
   }
 };
@@ -88,7 +89,7 @@ export const getAdmins = async (req: Request, res: Response): Promise<void> => {
     const paginatedAdmins = await executePaginatedQuery(Admin, req.query, [], '-passwordHash');
     successResponse(res, 200, SuccessMessages.ADMIN.RETRIEVED, paginatedAdmins);
   } catch (error) {
-    logger.error(`Get Admins error: ${error}`);
+    logger.error(LoggerMessages.GET_ADMINS_ERROR(error));
     errorResponse(res, 500, ErrorMessages.ADMIN.RETRIEVED_FAILED, error);
   }
 };
@@ -116,7 +117,7 @@ export const updateAdmin = async (req: Request, res: Response): Promise<void> =>
 
     successResponse(res, 200, SuccessMessages.ADMIN.UPDATED, { admin });
   } catch (error) {
-    logger.error(`Update Admin error: ${error}`);
+    logger.error(LoggerMessages.UPDATE_ADMIN_ERROR(error));
     errorResponse(res, 500, ErrorMessages.ADMIN.UPDATED_FAILED, error);
   }
 };
@@ -133,7 +134,7 @@ export const deleteAdmin = async (req: Request, res: Response): Promise<void> =>
 
     successResponse(res, 200, SuccessMessages.ADMIN.DELETED);
   } catch (error) {
-    logger.error(`Delete Admin error: ${error}`);
+    logger.error(LoggerMessages.DELETE_ADMIN_ERROR(error));
     errorResponse(res, 500, ErrorMessages.ADMIN.DELETED_FAILED, error);
   }
 };

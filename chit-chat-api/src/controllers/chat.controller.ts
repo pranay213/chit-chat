@@ -165,7 +165,7 @@ export const deleteMultipleChats = async (req: Request, res: Response): Promise<
   try {
     const { chatIds } = req.body;
     if (!chatIds || !Array.isArray(chatIds) || chatIds.length === 0) {
-      errorResponse(res, 400, 'Invalid chatIds list');
+      errorResponse(res, 400, ErrorMessages.CHAT.INVALID_CHAT_IDS);
       return;
     }
 

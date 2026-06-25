@@ -6,6 +6,7 @@ import { Country } from '../models/country';
 import { User } from '../models/user';
 import { AdminRole } from '../constants/roles';
 import logger from './logger';
+import { LoggerMessages } from "../constants/loggerMessages";
 
 export const seedDefaultAdmins = async () => {
   try {
@@ -22,7 +23,7 @@ export const seedDefaultAdmins = async () => {
         role: AdminRole.SUPER_ADMIN,
         isActive: true
       });
-      logger.info(`Seeded default Super Admin: ${superAdminEmail} / password123`);
+      logger.info(LoggerMessages.SEEDED_DEFAULT_SUPER_ADMIN_PASSWORD123(superAdminEmail));
     }
 
     const developerExists = await Admin.findOne({ email: developerEmail });
@@ -35,10 +36,10 @@ export const seedDefaultAdmins = async () => {
         role: AdminRole.DEVELOPER,
         isActive: true
       });
-      logger.info(`Seeded default Developer Admin: ${developerEmail} / password123`);
+      logger.info(LoggerMessages.SEEDED_DEFAULT_DEVELOPER_ADMIN_PASSWORD123(developerEmail));
     }
   } catch (error) {
-    logger.error(`Failed to seed default admins: ${error}`);
+    logger.error(LoggerMessages.FAILED_TO_SEED_DEFAULT_ADMINS(error));
   }
 };
 
@@ -54,10 +55,10 @@ export const seedCountries = async () => {
     if (count !== countriesList.length || !hasFlags) {
       await Country.deleteMany({});
       await Country.insertMany(countriesList);
-      logger.info(`Re-seeded ${countriesList.length} default countries with flag URLs and emojis into database.`);
+      logger.info(LoggerMessages.RE_SEEDED_DEFAULT_COUNTRIES_WITH_FLAG_URLS_AND(countriesList.length));
     }
   } catch (error) {
-    logger.error(`Failed to seed countries: ${error}`);
+    logger.error(LoggerMessages.FAILED_TO_SEED_COUNTRIES(error));
   }
 };
 
@@ -76,9 +77,9 @@ export const seedChatBotUser = async () => {
         profileImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80',
         lastSeen: new Date(),
       });
-      logger.info(`Seeded Ollama AI Bot user successfully!`);
+      logger.info(LoggerMessages.SEEDED_OLLAMA_AI_BOT_USER_SUCCESSFULLY);
     }
   } catch (error) {
-    logger.error(`Failed to seed Ollama AI Bot user: ${error}`);
+    logger.error(LoggerMessages.FAILED_TO_SEED_OLLAMA_AI_BOT_USER(error));
   }
 };

@@ -1,5 +1,6 @@
 import { Ollama } from 'ollama';
 import logger from '../utils/logger';
+import { LoggerMessages } from "../constants/loggerMessages";
 
 interface OllamaChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -19,7 +20,7 @@ export const generateOllamaResponse = async (
   modelName: string = 'gpt-oss:20b' // Using gpt-oss:20b as the low token model hosted on this endpoint
 ): Promise<string> => {
   try {
-    logger.info(`Sending chat request to Ollama with model: ${modelName}`);
+    logger.info(LoggerMessages.SENDING_CHAT_REQUEST_TO_OLLAMA_WITH_MODEL(modelName));
 
     // Prepend system prompt to enforce agent name
     const systemPrompt: OllamaChatMessage = {
@@ -60,7 +61,7 @@ export const generateOllamaResponse = async (
 
     return fullContent;
   } catch (error: any) {
-    logger.warn(`Ollama SDK request failed. Falling back to Mock AI. Error: ${error.message}`);
+    logger.warn(LoggerMessages.OLLAMA_SDK_REQUEST_FAILED_FALLING_BACK_TO_MOCK_AI(error.message));
 
     // Fallback: Mock AI responder
     const userMessage = messages[messages.length - 1]?.content || '';

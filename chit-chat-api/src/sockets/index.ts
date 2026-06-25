@@ -8,6 +8,7 @@ import { SocketEvents } from '../constants/socketEvents';
 import { ErrorMessages } from '../constants/errors';
 import logger from '../utils/logger';
 import { generateOllamaResponse } from '../services/ollama.service';
+import { LoggerMessages } from "../constants/loggerMessages";
 
 // In-memory active connections mapping (userId -> Set of active socketIds)
 const onlineUsers = new Map<string, Set<string>>();
@@ -37,14 +38,14 @@ export const setupSockets = (io: Server) => {
       socket.data.userProfile = userProfile;
       next();
     } catch (err) {
-      logger.error(`Socket auth error: ${err}`);
+      logger.error(LoggerMessages.SOCKET_AUTH_ERROR(err));
       return next(new Error(ErrorMessages.AUTH.INVALID_CREDENTIALS));
     }
   });
 
   io.on(SocketEvents.CONNECTION, (socket: Socket) => {
     const userId = socket.data.user.id;
-    logger.info(`User connected to socket: ${userId} (Socket: ${socket.id})`);
+    logger.info(LoggerMessages.USER_CONNECTED_TO_SOCKET_SOCKET(userId, socket.id));
 
     // Add to active online users registry
     if (!onlineUsers.has(userId)) {
@@ -54,7 +55,7 @@ export const setupSockets = (io: Server) => {
 
     // Update user online status in database (background execution)
     User.findByIdAndUpdate(userId, { status: 'online', lastSeen: new Date() }).exec()
-      .catch(err => logger.error(`Error updating user online status: ${err}`));
+      .catch(err => logger.error(LoggerMessages.ERROR_UPDATING_USER_ONLINE_STATUS(err)));
 
     // Broadcast online status to other users
     socket.broadcast.emit(SocketEvents.USER_STATUS_UPDATE, { userId, status: 'online' });
@@ -62,13 +63,13 @@ export const setupSockets = (io: Server) => {
     // Join Chat Rooms
     socket.on(SocketEvents.JOIN_CHAT, (chatId: string) => {
       socket.join(`chat:${chatId}`);
-      logger.info(`User ${userId} joined room chat:${chatId}`);
+      logger.info(LoggerMessages.USER_JOINED_ROOM_CHAT(userId, chatId));
     });
 
     // Leave Chat Rooms
     socket.on(SocketEvents.LEAVE_CHAT, (chatId: string) => {
       socket.leave(`chat:${chatId}`);
-      logger.info(`User ${userId} left room chat:${chatId}`);
+      logger.info(LoggerMessages.USER_LEFT_ROOM_CHAT(userId, chatId));
     });
 
     // Send Message Event (OPTIMIZED - Broadcasts instantly, persists in background)
@@ -167,7 +168,7 @@ export const setupSockets = (io: Server) => {
               }
             }
           } catch (botErr) {
-            logger.error(`Auto-reply bot error: ${botErr}`);
+            logger.error(LoggerMessages.AUTO_REPLY_BOT_ERROR(botErr));
           }
 
           // --- Ollama AI Chatbot for 9999999999 ---
@@ -228,14 +229,14 @@ export const setupSockets = (io: Server) => {
               }
             }
           } catch (ollamaErr) {
-            logger.error(`Ollama chatbot error: ${ollamaErr}`);
+            logger.error(LoggerMessages.OLLAMA_CHATBOT_ERROR(ollamaErr));
           }
-        }).catch(err => logger.error(`Error persisting message/chat status: ${err}`));
+        }).catch(err => logger.error(LoggerMessages.ERROR_PERSISTING_MESSAGE_CHAT_STATUS(err)));
 
         // 5. Acknowledge delivery to sender
         if (callback) callback({ success: true, message: populatedMessage });
       } catch (error) {
-        logger.error(`Socket sendMessage error: ${error}`);
+        logger.error(LoggerMessages.SOCKET_SENDMESSAGE_ERROR(error));
         if (callback) callback({ success: false, error: ErrorMessages.SYSTEM.SERVER_ERROR });
       }
     });
@@ -255,7 +256,7 @@ export const setupSockets = (io: Server) => {
       
       // Update read status in database background
       Message.findByIdAndUpdate(messageId, { $addToSet: { readBy: userId } }).exec()
-        .catch(err => logger.error(`Error updating message read status: ${err}`));
+        .catch(err => logger.error(LoggerMessages.ERROR_UPDATING_MESSAGE_READ_STATUS(err)));
 
       // Broadcast acknowledgment
       socket.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE_READ, { chatId, messageId, userId });
@@ -266,7 +267,7 @@ export const setupSockets = (io: Server) => {
 
       // Update delivery status in database background
       Message.findByIdAndUpdate(messageId, { $addToSet: { deliveredTo: userId } }).exec()
-        .catch(err => logger.error(`Error updating message delivery status: ${err}`));
+        .catch(err => logger.error(LoggerMessages.ERROR_UPDATING_MESSAGE_DELIVERY_STATUS(err)));
 
       // Broadcast acknowledgment
       socket.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE_DELIVERED, { chatId, messageId, userId });
@@ -325,7 +326,7 @@ export const setupSockets = (io: Server) => {
 
     // Disconnect Event Handler
     socket.on(SocketEvents.DISCONNECT, () => {
-      logger.info(`User disconnected from socket: ${userId} (Socket: ${socket.id})`);
+      logger.info(LoggerMessages.USER_DISCONNECTED_FROM_SOCKET_SOCKET(userId, socket.id));
       
       const userSockets = onlineUsers.get(userId);
       if (userSockets) {
@@ -335,7 +336,7 @@ export const setupSockets = (io: Server) => {
           
           // User is fully offline on all devices. Update status in database.
           User.findByIdAndUpdate(userId, { status: 'offline', lastSeen: new Date() }).exec()
-            .catch(err => logger.error(`Error updating user offline status: ${err}`));
+            .catch(err => logger.error(LoggerMessages.ERROR_UPDATING_USER_OFFLINE_STATUS(err)));
 
           // Broadcast offline state update
           socket.broadcast.emit(SocketEvents.USER_STATUS_UPDATE, { userId, status: 'offline', lastSeen: new Date() });

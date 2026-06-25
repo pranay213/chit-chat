@@ -4,6 +4,7 @@ import { successResponse, errorResponse } from '../utils/response';
 import { ErrorMessages, SuccessMessages } from '../constants/errors';
 import { executePaginatedQuery } from '../utils/queryParser';
 import logger from '../utils/logger';
+import { LoggerMessages } from "../constants/loggerMessages";
 
 export const createUser = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -37,7 +38,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 
     successResponse(res, 201, SuccessMessages.USER.CREATED, { user: newUser });
   } catch (error) {
-    logger.error(`Create User error: ${error}`);
+    logger.error(LoggerMessages.CREATE_USER_ERROR(error));
     errorResponse(res, 500, ErrorMessages.USER.CREATED_FAILED, error);
   }
 };
@@ -52,7 +53,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     const paginatedUsers = await executePaginatedQuery(User, query, populate);
     successResponse(res, 200, SuccessMessages.USER.RETRIEVED, paginatedUsers);
   } catch (error) {
-    logger.error(`Get Users error: ${error}`);
+    logger.error(LoggerMessages.GET_USERS_ERROR(error));
     errorResponse(res, 500, ErrorMessages.USER.RETRIEVED_FAILED, error);
   }
 };
@@ -69,7 +70,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
 
     successResponse(res, 200, SuccessMessages.USER.RETRIEVED, { user });
   } catch (error) {
-    logger.error(`Get User by ID error: ${error}`);
+    logger.error(LoggerMessages.GET_USER_BY_ID_ERROR(error));
     errorResponse(res, 500, ErrorMessages.USER.RETRIEVED_FAILED, error);
   }
 };
@@ -88,7 +89,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
     successResponse(res, 200, SuccessMessages.USER.UPDATED, { user });
   } catch (error) {
-    logger.error(`Update User error: ${error}`);
+    logger.error(LoggerMessages.UPDATE_USER_ERROR(error));
     errorResponse(res, 500, ErrorMessages.USER.UPDATED_FAILED, error);
   }
 };
@@ -105,7 +106,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
 
     successResponse(res, 200, SuccessMessages.USER.DELETED);
   } catch (error) {
-    logger.error(`Delete User error: ${error}`);
+    logger.error(LoggerMessages.DELETE_USER_ERROR(error));
     errorResponse(res, 500, ErrorMessages.USER.DELETED_FAILED, error);
   }
 };
