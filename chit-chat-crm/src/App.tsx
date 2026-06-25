@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Users, Shield, Settings, 
   MessageSquare, Phone, Activity, Bell, Search, LogOut, Menu, X, Sun, Moon, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
+import { io } from 'socket.io-client';
 import './index.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1/admin';
@@ -106,10 +107,13 @@ const Header = ({ toggleSidebar, theme, toggleTheme }: any) => (
   </header>
 );
 
+const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api/v1/admin', '') : 'http://localhost:3000';
+
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+  const [incomingCall, setIncomingCall] = useState<any>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -119,6 +123,49 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', sidebarCollapsed.toString());
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    
+    const socket = io(SOCKET_URL, { auth: { token } });
+    
+    socket.on('connect', () => {
+      console.log('CRM Socket connected:', socket.id);
+    });
+
+    socket.on('notification', (data) => {
+      console.log('New Notification:', data);
+      // Can implement web-push here or toast
+    });
+
+    socket.on('incoming_call', (data) => {
+      setIncomingCall(data);
+      const ringer = new Audio('/ringer.mp3');
+      ringer.loop = true;
+      ringer.play().catch(e => console.log('Audio play prevented by browser:', e));
+      (window as any).ringerAudio = ringer;
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  const acceptCall = () => {
+    if ((window as any).ringerAudio) {
+      (window as any).ringerAudio.pause();
+    }
+    alert(`Call accepted from ${incomingCall?.callerName}`);
+    setIncomingCall(null);
+  };
+
+  const rejectCall = () => {
+    if ((window as any).ringerAudio) {
+      (window as any).ringerAudio.pause();
+    }
+    setIncomingCall(null);
+  };
 
   return (
     <div className="app-container">
@@ -134,6 +181,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           theme={theme} 
           toggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')} 
         />
+        
+        {incomingCall && (
+          <div style={{ position: 'fixed', top: 20, right: 20, background: 'var(--bg-card)', padding: '1rem 2rem', borderRadius: 'var(--radius-md)', zIndex: 9999, border: '1px solid var(--accent-primary)', boxShadow: '0 4px 20px var(--accent-glow)' }}>
+            <h3 style={{ marginBottom: '10px' }}>Incoming Call</h3>
+            <p style={{ marginBottom: '15px' }}>{incomingCall.callerName} is calling...</p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={acceptCall} className="btn btn-primary" style={{ background: 'var(--success)' }}><Phone size={16} /> Accept</button>
+              <button onClick={rejectCall} className="btn btn-primary" style={{ background: 'var(--danger)' }}><X size={16} /> Reject</button>
+            </div>
+          </div>
+        )}
+
         <div className="page-wrapper">
           {children}
         </div>
@@ -421,13 +480,15 @@ const RolesPage = () => {
 
 const SettingsPage = () => {
   const [settings, setSettings] = useState<any>({
-    smsGatewayApiKey: '', smtpHost: '', smtpPort: '', smtpFromEmail: '', smtpUser: ''
+    smsGatewayApiKey: '', 
+    smtpHost: '', smtpPort: '', smtpFromEmail: '', smtpUser: '',
+    cloudinaryCloudName: '', cloudinaryApiKey: '', cloudinaryApiSecret: ''
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios.get(`${API_URL}/settings`).then(res => {
-      if (res.data.data) setSettings(res.data.data);
+      if (res.data.settings) setSettings(res.data.settings);
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
@@ -456,6 +517,26 @@ const SettingsPage = () => {
               <input type="text" className="form-input" value={settings.smsGatewayApiKey || ''} onChange={e => setSettings({...settings, smsGatewayApiKey: e.target.value})} />
             </div>
             <button type="submit" className="btn btn-primary">Save SMS Settings</button>
+          </form>
+        </div>
+        
+        <div className="glass-card">
+          <h2>Cloudinary Integration</h2>
+          <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>Configure image upload hosting.</p>
+          <form onSubmit={handleSave}>
+            <div className="form-group">
+              <label className="form-label">Cloud Name</label>
+              <input type="text" className="form-input" value={settings.cloudinaryCloudName || ''} onChange={e => setSettings({...settings, cloudinaryCloudName: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">API Key</label>
+              <input type="text" className="form-input" value={settings.cloudinaryApiKey || ''} onChange={e => setSettings({...settings, cloudinaryApiKey: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">API Secret</label>
+              <input type="password" className="form-input" value={settings.cloudinaryApiSecret || ''} onChange={e => setSettings({...settings, cloudinaryApiSecret: e.target.value})} />
+            </div>
+            <button type="submit" className="btn btn-primary">Save Cloudinary Settings</button>
           </form>
         </div>
       </div>
