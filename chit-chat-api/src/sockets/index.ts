@@ -166,6 +166,21 @@ export const setupSockets = (io: Server) => {
                   updatedAt: replyMsg.updatedAt || new Date()
                 };
                 io.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE, replyPayload);
+
+                // --- Trigger Push Notification to User for Bot Reply ---
+                try {
+                  const userDoc = await User.findById(userId).select('pushToken').lean();
+                  if (userDoc && userDoc.pushToken) {
+                    await sendPushNotification(
+                      userDoc.pushToken,
+                      chat.isGroup ? `${botUser.displayName || 'Bot'} in ${chat.groupName}` : botUser.displayName || 'Bot',
+                      replyText,
+                      { chatId, senderId: botId, categoryId: 'CHAT_MESSAGE' }
+                    );
+                  }
+                } catch (pushErr) {
+                  logger.error(`Failed to send bot push notification: ${pushErr}`);
+                }
               }
             }
           } catch (botErr) {
@@ -227,6 +242,21 @@ export const setupSockets = (io: Server) => {
                   updatedAt: replyMsg.updatedAt || new Date()
                 };
                 io.to(`chat:${chatId}`).emit(SocketEvents.MESSAGE, replyPayload);
+
+                // --- Trigger Push Notification to User for Ollama Reply ---
+                try {
+                  const userDoc = await User.findById(userId).select('pushToken').lean();
+                  if (userDoc && userDoc.pushToken) {
+                    await sendPushNotification(
+                      userDoc.pushToken,
+                      chat.isGroup ? `${ollamaUser.displayName || 'Ollama AI Bot'} in ${chat.groupName}` : ollamaUser.displayName || 'Ollama AI Bot',
+                      replyText,
+                      { chatId, senderId: botId, categoryId: 'CHAT_MESSAGE' }
+                    );
+                  }
+                } catch (pushErr) {
+                  logger.error(`Failed to send Ollama push notification: ${pushErr}`);
+                }
               }
             }
           } catch (ollamaErr) {
