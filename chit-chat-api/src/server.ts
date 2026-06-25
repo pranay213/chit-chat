@@ -15,6 +15,15 @@ import { LoggerMessages } from "./constants/loggerMessages";
 
 // Load environment variables
 dotenv.config();
+
+// Validate required environment variables on startup
+const REQUIRED_ENV_VARS = ['JWT_SECRET', 'MONGODB_URI'];
+const missingVars = REQUIRED_ENV_VARS.filter(v => !process.env[v]);
+if (missingVars.length > 0) {
+  console.error(`FATAL: Missing required environment variables: ${missingVars.join(', ')}`);
+  console.error('Please set these in your Render environment variables dashboard.');
+  process.exit(1);
+}
 // Connect to Database
 connectDB().then(() => {
   seedDefaultAdmins();
