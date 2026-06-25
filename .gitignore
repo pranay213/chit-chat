@@ -138,3 +138,6 @@ test-*.ts
 **/test-*.js
 **/test-*.ts
 **/test*.txt
+
+# Firebase Credentials
+google-services.json

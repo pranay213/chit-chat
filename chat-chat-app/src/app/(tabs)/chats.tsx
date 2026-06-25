@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../../context/AuthContext';
 import { api, API_BASE_URL } from '../../services/api';
@@ -50,9 +50,6 @@ export default function ChatsScreen() {
   const router = useRouter();
   const { user, token, refreshUser } = useAuth();
   const [chats, setChats] = useState<ChatThread[]>([]);
-  const [stories, setStories] = useState<any[]>([
-    { id: 'my-status', name: 'My status', avatar: null, isMyStatus: true }
-  ]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -86,8 +83,8 @@ export default function ChatsScreen() {
     if (isSelectionMode) {
       toggleSelectChat(item._id);
     } else {
-      const otherParticipant = item.participants.find((p: any) => p._id !== user?._id) || item.participants[0];
-      const isSelfChat = !item.isGroup && (item.participants.length === 1 || item.participants.every((p: any) => p._id === user?._id));
+      const otherParticipant = item.participants?.find((p: any) => p._id !== user?._id) || item.participants?.[0];
+      const isSelfChat = !item.isGroup && (item.participants?.length === 1 || item.participants?.every((p: any) => p._id === user?._id));
       const chatName = item.isGroup 
         ? item.groupName 
         : isSelfChat 
@@ -181,11 +178,11 @@ export default function ChatsScreen() {
       // 1. Check if chat thread already exists in the list
       const existingAIChat = chats.find(c => 
         !c.isGroup && 
-        c.participants.some((p: any) => p.mobileNumber === '9999999999')
+        c.participants?.some((p: any) => p.mobileNumber === '9999999999')
       );
 
       if (existingAIChat) {
-        const otherParticipant = existingAIChat.participants.find((p: any) => p.mobileNumber === '9999999999');
+        const otherParticipant = existingAIChat.participants?.find((p: any) => p.mobileNumber === '9999999999');
         router.push({
           pathname: '/chat/[id]',
           params: {
@@ -255,43 +252,9 @@ export default function ChatsScreen() {
     }
   };
 
-  const fetchStories = async () => {
-    if (!token) return;
-    try {
-      const res = await api.getStatuses(token);
-      const statusData = res.data || res;
-      const myStatuses = statusData.myStatuses || [];
-      const recentStatuses = statusData.recentStatuses || [];
-
-      const otherContactsStories = recentStatuses.map((g: any) => ({
-        id: g.userId,
-        name: g.displayName || 'Unknown',
-        avatar: g.profileImage || null,
-        online: g.status === 'online',
-        isMyStatus: false,
-        statuses: g.statuses
-      }));
-
-      setStories([
-        { 
-          id: 'my-status', 
-          name: 'My status', 
-          avatar: user?.profileImage || null, 
-          isMyStatus: true,
-          hasStatus: myStatuses.length > 0,
-          statuses: myStatuses
-        },
-        ...otherContactsStories
-      ]);
-    } catch (err) {
-      console.log('Error fetching stories:', err);
-    }
-  };
-
   useFocusEffect(
     useCallback(() => {
       fetchChats();
-      fetchStories();
       refreshUser();
     }, [token])  // Only re-run when token changes, not on every user update
   );
@@ -325,7 +288,7 @@ export default function ChatsScreen() {
         setChats((prevChats) =>
           prevChats.map((c) => ({
             ...c,
-            participants: c.participants.map((p: any) => {
+            participants: c.participants?.map((p: any) => {
               if (p._id === data.userId) {
                 return {
                   ...p,
@@ -338,19 +301,7 @@ export default function ChatsScreen() {
           }))
         );
 
-        // Also update stories row avatar
-        setStories((prev) =>
-          prev.map((s) => {
-            if (s.id === data.userId) {
-              return {
-                ...s,
-                name: data.displayName ?? s.name,
-                avatar: data.profileImage !== undefined ? data.profileImage : s.avatar,
-              };
-            }
-            return s;
-          })
-        );
+
       });
     }
 
@@ -364,8 +315,8 @@ export default function ChatsScreen() {
   }, [user, token]);
 
   const filteredChats = chats.filter(c => {
-    const otherParticipant = c.participants.find((p: any) => p._id !== user?._id) || c.participants[0];
-    const isSelfChat = !c.isGroup && (c.participants.length === 1 || c.participants.every((p: any) => p._id === user?._id));
+    const otherParticipant = c.participants?.find((p: any) => p._id !== user?._id) || c.participants?.[0];
+    const isSelfChat = !c.isGroup && (c.participants?.length === 1 || c.participants?.every((p: any) => p._id === user?._id));
     const name = c.isGroup 
       ? c.groupName 
       : isSelfChat 
@@ -480,55 +431,6 @@ export default function ChatsScreen() {
       </View>
 
       {/* Stories / Status row */}
-      <View style={styles.storiesSection}>
-        <FlatList
-          data={stories}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.storyItem} onPress={() => router.push('/status')}>
-              <View style={styles.storyRingContainer}>
-                {item.isMyStatus ? (
-                  <View style={styles.myStatusContainer}>
-                    {item.avatar ? (
-                      <Image source={{ uri: item.avatar }} style={styles.storyAvatar} />
-                    ) : (
-                      <View style={[styles.storyAvatar, { backgroundColor: '#E0E0E0', justifyContent: 'center', alignItems: 'center' }]}>
-                        <Ionicons name="person" size={24} color="#666" />
-                      </View>
-                    )}
-                    {!item.hasStatus ? (
-                      <View style={styles.plusBadge}>
-                        <Ionicons name="add" size={12} color="#FFF" />
-                      </View>
-                    ) : (
-                      <View style={[styles.storyAvatarBorder, styles.storyAvatarBorderActive, { position: 'absolute', top: -3, left: -3, right: -3, bottom: -3, borderRadius: 28 }]} />
-                    )}
-                  </View>
-                ) : (
-                  <View style={[styles.storyAvatarBorder, styles.storyAvatarBorderActive]}>
-                    {item.avatar ? (
-                      <Image source={{ uri: item.avatar }} style={styles.storyAvatar} />
-                    ) : (
-                      <View style={[styles.storyAvatar, { backgroundColor: '#7E57C2', justifyContent: 'center', alignItems: 'center' }]}>
-                        <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
-                          {item.name ? item.name.substring(0, 1).toUpperCase() : 'U'}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
-              <Text style={styles.storyName} numberOfLines={1}>
-                {item.name}
-              </Text>
-            </TouchableOpacity>
-          )}
-          contentContainerStyle={styles.storiesList}
-        />
-      </View>
-
       {/* Chats List */}
       {loading ? (
         <ChatSkeleton rowCount={8} showStories={false} />
@@ -537,8 +439,8 @@ export default function ChatsScreen() {
           data={filteredChats}
           keyExtractor={item => item._id}
           renderItem={({ item }) => {
-            const otherParticipant = item.participants.find((p: any) => p._id !== user?._id) || item.participants[0];
-            const isSelfChat = !item.isGroup && (item.participants.length === 1 || item.participants.every((p: any) => p._id === user?._id));
+            const otherParticipant = item.participants?.find((p: any) => p._id !== user?._id) || item.participants?.[0];
+            const isSelfChat = !item.isGroup && (item.participants?.length === 1 || item.participants?.every((p: any) => p._id === user?._id));
             const chatName = item.isGroup 
               ? item.groupName 
               : isSelfChat 

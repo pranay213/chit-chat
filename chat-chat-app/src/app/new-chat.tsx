@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Contacts from 'expo-contacts/legacy';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL, api } from '../services/api';
@@ -37,6 +37,10 @@ export default function NewChatScreen() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isGroupMode, setIsGroupMode] = useState(false);
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [groupName, setGroupName] = useState('');
+  const [showGroupNameInput, setShowGroupNameInput] = useState(false);
 
   const handleCallPress = async (contact: Contact, callType: 'audio' | 'video') => {
     if (contact._id === user?._id) return;
@@ -260,6 +264,43 @@ export default function NewChatScreen() {
     }
   };
 
+  const createGroup = async () => {
+    if (!user || !token || !groupName.trim() || selectedContacts.length === 0) return;
+    setLoading(true);
+    try {
+      const res = await api.createGroupChat({
+        groupName: groupName.trim(),
+        participants: selectedContacts,
+        adminId: user._id
+      }, token);
+      const chat = res.chat;
+      if (chat) {
+        router.replace({
+          pathname: '/chat/[id]',
+          params: {
+            id: chat._id,
+            chatName: chat.groupName,
+            chatAvatar: chat.groupPhoto || '',
+            isGroup: 'true',
+            isOnline: 'false',
+            receiverId: ''
+          }
+        });
+      } else {
+        Alert.alert('Error', 'Could not create group chat');
+      }
+    } catch (err: any) {
+      console.error('Failed to create group:', err);
+      Alert.alert('Error', err.message || 'Failed to create group chat');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleContactSelection = (id: string) => {
+    setSelectedContacts(prev => prev.includes(id) ? prev.filter(cId => cId !== id) : [...prev, id]);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
@@ -267,65 +308,107 @@ export default function NewChatScreen() {
       {/* Header */}
       <View style={[styles.header, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => {
+            if (showGroupNameInput) {
+              setShowGroupNameInput(false);
+            } else if (isGroupMode) {
+              setIsGroupMode(false);
+              setSelectedContacts([]);
+            } else {
+              router.back();
+            }
+          }} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>{isCall ? 'New Call' : 'Select Contact'}</Text>
-            <Text style={{ fontSize: 12, color: '#666' }}>{contacts.length} contacts</Text>
+            <Text style={styles.headerTitle}>
+              {showGroupNameInput ? 'Group Details' : isGroupMode ? 'Add Participants' : isCall ? 'New Call' : 'Select Contact'}
+            </Text>
+            {!showGroupNameInput && (
+              <Text style={{ fontSize: 12, color: '#666' }}>
+                {isGroupMode ? `${selectedContacts.length} selected` : `${contacts.length} contacts`}
+              </Text>
+            )}
           </View>
         </View>
-        <TouchableOpacity onPress={fetchContacts} style={{ padding: 8 }}>
-          {loading ? (
-            <ActivityIndicator size="small" color="#7E57C2" />
-          ) : (
-            <Ionicons name="refresh-outline" size={24} color="#7E57C2" />
-          )}
-        </TouchableOpacity>
+        {!isGroupMode && !showGroupNameInput && (
+          <TouchableOpacity onPress={fetchContacts} style={{ padding: 8 }}>
+            {loading ? (
+              <ActivityIndicator size="small" color="#7E57C2" />
+            ) : (
+              <Ionicons name="refresh-outline" size={24} color="#7E57C2" />
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Search Input */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={20} color="#999" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search contacts or groups"
-            placeholderTextColor="#999"
-            value={search}
-            onChangeText={setSearch}
+      {/* Search or Group Name Input */}
+      {showGroupNameInput ? (
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Ionicons name="people-outline" size={20} color="#999" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Enter Group Subject"
+              placeholderTextColor="#999"
+              value={groupName}
+              onChangeText={setGroupName}
+              autoFocus
+            />
+          </View>
+        </View>
+      ) : (
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search-outline" size={20} color="#999" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={isGroupMode ? "Search contacts to add" : "Search contacts or groups"}
+              placeholderTextColor="#999"
+              value={search}
+              onChangeText={setSearch}
+            />
+          </View>
+        </View>
+      )}
+
+      {showGroupNameInput ? (
+        <View style={{ flex: 1, padding: 20 }}>
+          <Text style={{ color: '#666', marginBottom: 20 }}>Please provide a group subject and optional group icon.</Text>
+          <FlatList
+            data={contacts.filter(c => selectedContacts.includes(c._id))}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item._id}
+            renderItem={({ item }) => (
+              <View style={{ alignItems: 'center', marginRight: 15, width: 60 }}>
+                {item.profileImage ? (
+                  <Image source={{ uri: item.profileImage }} style={{ width: 50, height: 50, borderRadius: 25 }} />
+                ) : (
+                  <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: '#7E57C2', justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{item.displayName.substring(0, 1).toUpperCase()}</Text>
+                  </View>
+                )}
+                <Text style={{ fontSize: 10, textAlign: 'center', marginTop: 4 }} numberOfLines={1}>{item.displayName}</Text>
+              </View>
+            )}
           />
         </View>
-      </View>
-
-      <FlatList
-        data={filteredContacts}
-        keyExtractor={item => item._id}
-        ListHeaderComponent={() => {
-          if (search) return null;
-          return (
-            <View style={styles.actionItems}>
-              <TouchableOpacity style={styles.actionItem} onPress={() => Alert.alert('New Group', 'Create Group Chat')}>
-                <View style={styles.actionIconContainer}>
-                   <Ionicons name="people" size={22} color="#7E57C2" />
-                </View>
-                <Text style={styles.actionText}>New Group</Text>
-              </TouchableOpacity>
+      ) : (
+        <FlatList
+          data={filteredContacts.filter(c => c._id !== user?._id || !isGroupMode)}
+          keyExtractor={item => item._id}
+          ListHeaderComponent={() => {
+            if (search || isGroupMode) return null;
+            return (
+              <View style={styles.actionItems}>
+                <TouchableOpacity style={styles.actionItem} onPress={() => setIsGroupMode(true)}>
+                  <View style={styles.actionIconContainer}>
+                     <Ionicons name="people" size={22} color="#7E57C2" />
+                  </View>
+                  <Text style={styles.actionText}>New Group</Text>
+                </TouchableOpacity>
               
-              <TouchableOpacity style={styles.actionItem} onPress={() => Alert.alert('New Contact', 'Create Contact')}>
-                <View style={styles.actionIconContainer}>
-                   <Ionicons name="person-add" size={22} color="#7E57C2" />
-                </View>
-                <Text style={styles.actionText}>New Contact</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.actionItem} onPress={() => Alert.alert('New Community', 'Create Community')}>
-                <View style={styles.actionIconContainer}>
-                   <Ionicons name="globe" size={22} color="#7E57C2" />
-                </View>
-                <Text style={styles.actionText}>New Community</Text>
-              </TouchableOpacity>
-
               <TouchableOpacity style={styles.actionItem} onPress={startAIChat}>
                 <View style={[styles.actionIconContainer, { backgroundColor: '#E8F5E9' }]}>
                    <Ionicons name="hardware-chip" size={22} color="#00C853" />
@@ -338,8 +421,12 @@ export default function NewChatScreen() {
           );
         }}
         renderItem={({ item }) => {
+          const isSelected = selectedContacts.includes(item._id);
+
           const handleContactPress = () => {
-            if (isCall) {
+            if (isGroupMode) {
+              toggleContactSelection(item._id);
+            } else if (isCall) {
               handleCallPress(item, 'audio');
             } else {
               startChat(item);
@@ -347,7 +434,7 @@ export default function NewChatScreen() {
           };
 
           return (
-            <View style={styles.contactRowContainer}>
+            <View style={[styles.contactRowContainer, isSelected && { backgroundColor: '#F3E5F5' }]}>
               <TouchableOpacity 
                 style={[styles.contactItem, { flex: 1 }]}
                 onPress={handleContactPress}
@@ -360,7 +447,7 @@ export default function NewChatScreen() {
                       <Text style={styles.avatarText}>{item.displayName.substring(0, 1).toUpperCase()}</Text>
                     </View>
                   )}
-                  {item.status === 'online' && <View style={styles.onlineBadge} />}
+                  {item.status === 'online' && !isGroupMode && <View style={styles.onlineBadge} />}
                 </View>
                 
                 <View style={styles.contactDetails}>
@@ -369,6 +456,16 @@ export default function NewChatScreen() {
                     {item.status === 'online' ? 'Online' : `Last seen ${item.lastSeen || 'recently'}`}
                   </Text>
                 </View>
+
+                {isGroupMode && (
+                  <View style={{ marginLeft: 8, justifyContent: 'center' }}>
+                    <Ionicons 
+                      name={isSelected ? "checkmark-circle" : "ellipse-outline"} 
+                      size={24} 
+                      color={isSelected ? "#7E57C2" : "#999"} 
+                    />
+                  </View>
+                )}
               </TouchableOpacity>
 
               {isCall && item._id !== user?._id && (
@@ -399,6 +496,25 @@ export default function NewChatScreen() {
           )
         )}
       />
+      )}
+      {/* Floating Action Button for Group Mode */}
+      {isGroupMode && selectedContacts.length > 0 && !showGroupNameInput && (
+        <TouchableOpacity 
+          style={styles.fab}
+          onPress={() => setShowGroupNameInput(true)}
+        >
+          <Ionicons name="arrow-forward" size={24} color="#FFF" />
+        </TouchableOpacity>
+      )}
+
+      {showGroupNameInput && (
+        <TouchableOpacity 
+          style={styles.fab}
+          onPress={createGroup}
+        >
+          {loading ? <ActivityIndicator color="#FFF" /> : <Ionicons name="checkmark" size={24} color="#FFF" />}
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
@@ -561,4 +677,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    backgroundColor: '#7E57C2',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  }
 });

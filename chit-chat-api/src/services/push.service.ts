@@ -1,29 +1,29 @@
-import logger from '../utils/logger';
+import { Expo, ExpoPushMessage } from 'expo-server-sdk';
 
-export interface PushNotificationPayload {
-  to: string | string[];
-  title: string;
-  body: string;
-  data?: any;
-  categoryId?: string;
-}
+const expo = new Expo();
 
-export const sendPushNotification = async (payload: PushNotificationPayload) => {
+export const sendPushNotification = async (pushToken: string, title: string, body: string, data?: any) => {
+  if (!Expo.isExpoPushToken(pushToken)) {
+    console.error(`Push token ${pushToken} is not a valid Expo push token`);
+    return false;
+  }
+
+  const messages: ExpoPushMessage[] = [{
+    to: pushToken,
+    sound: 'default',
+    title,
+    body,
+    data: data || {},
+  }];
+
   try {
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Accept-encoding': 'gzip, deflate',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    logger.info(`Push notification sent: ${JSON.stringify(data)}`);
-    return data;
+    const chunks = expo.chunkPushNotifications(messages);
+    for (const chunk of chunks) {
+      await expo.sendPushNotificationsAsync(chunk);
+    }
+    return true;
   } catch (error) {
-    logger.error(`Failed to send push notification: ${error}`);
-    return null;
+    console.error('Error sending push notification', error);
+    return false;
   }
 };

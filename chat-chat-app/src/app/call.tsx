@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { getSocket } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -52,10 +52,12 @@ export default function CallScreen() {
   const [isVideoOn, setIsVideoOn] = useState(initialType === 'video');
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [remoteStreams, setRemoteStreams] = useState<{ id: string; stream: MediaStream }[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'none' | 'sepia' | 'grayscale' | 'blur'>('none');
 
   const pc = useRef<RTCPeerConnection | null>(null);
   const timerRef = useRef<any>(null);
+  const hasEnded = useRef(false);
 
   useEffect(() => {
     initWebRTC();
@@ -83,7 +85,11 @@ export default function CallScreen() {
 
       (pc.current as any).ontrack = (event: any) => {
         if (event.streams && event.streams[0]) {
-          setRemoteStream(event.streams[0]);
+          setRemoteStreams(prev => {
+            // Avoid duplicates
+            if (prev.find(s => s.stream.toURL() === event.streams[0].toURL())) return prev;
+            return [...prev, { id: Math.random().toString(), stream: event.streams[0] }];
+          });
           setCallState('connected');
         }
       };
@@ -158,6 +164,14 @@ export default function CallScreen() {
       pc.current = null;
     }
     if (timerRef.current) clearInterval(timerRef.current);
+    
+    const socket = getSocket();
+    if (socket) {
+      socket.off('callAccepted');
+      socket.off('webrtcIceCandidate');
+      socket.off('callRejected');
+      socket.off('callEnded');
+    }
   };
 
   useEffect(() => {
@@ -174,6 +188,9 @@ export default function CallScreen() {
   }, [callState]);
 
   const handleEndCall = (status = 'ended') => {
+    if (hasEnded.current) return;
+    hasEnded.current = true;
+
     setCallState('ended');
     cleanup();
     const socket = getSocket();
@@ -189,7 +206,11 @@ export default function CallScreen() {
         duration: timer
       }).catch(err => console.log('Error log', err));
     }
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   };
 
   const toggleMute = () => {
@@ -201,13 +222,39 @@ export default function CallScreen() {
     }
   };
 
-  const toggleVideo = () => {
-    if (localStream) {
-      localStream.getVideoTracks().forEach(track => {
-        track.enabled = !track.enabled;
-      });
-      setIsVideoOn(!isVideoOn);
+  const toggleVideo = async () => {
+    if (callType === 'audio') {
+      // Switching from Audio to Video
+      try {
+        const stream = await mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        const videoTrack = stream.getVideoTracks()[0];
+        if (localStream && pc.current) {
+          localStream.addTrack(videoTrack);
+          pc.current.addTrack(videoTrack, localStream);
+          
+          // Re-negotiate (simple implementation assumes socket handles updates or just starts sending)
+          // In a real WebRTC app, renegotiation is required here.
+        }
+        setCallType('video');
+        setIsVideoOn(true);
+      } catch (e) {
+        console.error("Could not get video track", e);
+      }
+    } else {
+      // Toggle video track enabled state
+      if (localStream) {
+        localStream.getVideoTracks().forEach(track => {
+          track.enabled = !track.enabled;
+        });
+        setIsVideoOn(!isVideoOn);
+      }
     }
+  };
+
+  const toggleFilter = () => {
+    const filters = ['none', 'sepia', 'grayscale', 'blur'] as const;
+    const currentIndex = filters.indexOf(activeFilter);
+    setActiveFilter(filters[(currentIndex + 1) % filters.length]);
   };
 
   const formatTimer = (secs: number) => {
@@ -233,12 +280,18 @@ export default function CallScreen() {
       {/* Video Feeds */}
       {callType === 'video' && (
         <View style={styles.videoContainer}>
-          {remoteStream ? (
-            <RTCView 
-              streamURL={remoteStream.toURL()} 
-              style={styles.remoteVideo}
-              objectFit="cover"
-            />
+          {remoteStreams.length > 0 ? (
+            <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap' }}>
+              {remoteStreams.map(rs => (
+                <View key={rs.id} style={remoteStreams.length > 1 ? { width: '50%', height: '50%', borderWidth: 1 } : { flex: 1 }}>
+                  <RTCView 
+                    streamURL={rs.stream.toURL()} 
+                    style={styles.remoteVideo}
+                    objectFit="cover"
+                  />
+                </View>
+              ))}
+            </View>
           ) : (
             <View style={styles.remoteVideoPlaceholder}>
               <ActivityIndicator size="large" color="#FFF" />
@@ -246,12 +299,17 @@ export default function CallScreen() {
           )}
 
           {localStream && isVideoOn && (
-            <RTCView 
-              streamURL={localStream.toURL()} 
-              style={styles.localVideo}
-              objectFit="cover"
-              zOrder={1}
-            />
+            <View style={[styles.localVideoContainer, remoteStreams.length > 1 ? { top: 60, right: 20 } : {}]}>
+              <RTCView 
+                streamURL={localStream.toURL()} 
+                style={styles.localVideo}
+                objectFit="cover"
+                zOrder={1}
+              />
+              {activeFilter !== 'none' && (
+                <View style={[styles.filterOverlay, styles[`filter_${activeFilter}` as keyof typeof styles] as any]} />
+              )}
+            </View>
           )}
         </View>
       )}
@@ -266,6 +324,12 @@ export default function CallScreen() {
           <TouchableOpacity style={[styles.controlBtn, !isVideoOn && styles.controlBtnActive]} onPress={toggleVideo}>
             <Ionicons name={isVideoOn ? "videocam" : "videocam-off"} size={28} color={!isVideoOn ? "#333" : "#FFF"} />
           </TouchableOpacity>
+
+          {callType === 'video' && (
+            <TouchableOpacity style={styles.controlBtn} onPress={toggleFilter}>
+              <Ionicons name="color-filter" size={28} color="#FFF" />
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity style={[styles.controlBtn, styles.endCallBtn]} onPress={() => handleEndCall('ended')}>
             <Ionicons name="call" size={32} color="#FFF" style={{ transform: [{ rotate: '135deg' }] }} />
@@ -349,5 +413,28 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
+  },
+  localVideoContainer: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 100,
+    height: 150,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+  },
+  filterOverlay: {
+    ...StyleSheet.absoluteFill as object,
+    zIndex: 2,
+  },
+  filter_sepia: {
+    backgroundColor: 'rgba(112, 66, 20, 0.3)',
+  },
+  filter_grayscale: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  filter_blur: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   }
 });

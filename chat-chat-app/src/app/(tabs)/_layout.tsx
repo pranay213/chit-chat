@@ -1,5 +1,5 @@
 import { Tabs, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useColorScheme, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';

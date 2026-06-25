@@ -4,7 +4,7 @@ import { loginAdmin, createAdmin, getAdmins, updateAdmin, deleteAdmin } from '..
 import { getSettings, updateSettings } from '../controllers/setting.controller';
 import { createRole, getRoles, getRoleById, updateRole, deleteRole } from '../controllers/role.controller';
 import { getSessionsAdmin, revokeSession } from '../controllers/session.controller';
-import { createUser, getUsers, getUserById, updateUser, deleteUser } from '../controllers/user.controller';
+import { createUser, getUsers, getUserById, updateUser, deleteUser, sendNotificationToUser } from '../controllers/user.controller';
 import { getAllChatsAdmin, getChatMessages } from '../controllers/chat.controller';
 import { authenticateAdmin, requireSuperAdmin } from '../middlewares/admin.middleware';
 
@@ -41,6 +41,7 @@ router.get('/users', getUsers);
 router.get('/users/:id', getUserById);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
+router.post('/users/:id/notify', sendNotificationToUser);
 
 // Global Chat Management (Admin & Super Admin)
 router.get('/chats', getAllChatsAdmin);

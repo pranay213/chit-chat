@@ -130,3 +130,33 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     errorResponse(res, 500, ErrorMessages.USER.DELETED_FAILED, error);
   }
 };
+
+import { sendPushNotification } from '../services/push.service';
+
+export const sendNotificationToUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { title, body, data } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+      errorResponse(res, 404, ErrorMessages.USER.NOT_FOUND);
+      return;
+    }
+
+    if (!user.pushToken) {
+      errorResponse(res, 400, 'User does not have a push token registered');
+      return;
+    }
+
+    const success = await sendPushNotification(user.pushToken, title || 'Test Notification', body || 'This is a test from CRM', data);
+    if (success) {
+      successResponse(res, 200, 'Push notification sent successfully');
+    } else {
+      errorResponse(res, 500, 'Failed to send push notification');
+    }
+  } catch (error) {
+    logger.error('Failed to send notification: ' + error);
+    errorResponse(res, 500, 'Failed to send push notification', error);
+  }
+};

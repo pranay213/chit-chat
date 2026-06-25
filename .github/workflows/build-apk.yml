@@ -39,6 +39,11 @@ jobs:
           cd chat-chat-app
           npm ci
 
+      - name: Inject google-services.json
+        run: |
+          cd chat-chat-app
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > google-services.json
+
       - name: Prebuild Expo Application
         run: |
           cd chat-chat-app

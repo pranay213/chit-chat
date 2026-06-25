@@ -21,6 +21,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.pranayk213.chatchatapp",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.ACCESS_NETWORK_STATE",
         "android.permission.CAMERA",
@@ -31,7 +32,8 @@
         "android.permission.WAKE_LOCK",
         "android.permission.BLUETOOTH",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
       ]
     },
     "web": {
@@ -41,9 +43,12 @@
     "plugins": [
       "expo-router",
       "@config-plugins/react-native-webrtc",
-
+      "@maplibre/maplibre-react-native",
       "expo-notifications",
       "expo-image-picker",
+      "expo-camera",
+      "expo-audio",
+      "expo-video",
       [
         "expo-location",
         {

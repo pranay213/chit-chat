@@ -12,23 +12,81 @@ import {
   ActivityIndicator, 
   ImageBackground,
   Animated,
-  Alert
+  Alert,
+  Modal
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
+import EmojiPicker from 'rn-emoji-keyboard';
 // import { Audio } from 'expo-av';
-import MapView, { Marker } from 'react-native-maps';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useAudioPlayer } from 'expo-audio';
+import AudioRecorder from '../../components/AudioRecorder';
+import MediaRecorder from '../../components/MediaRecorder';
+import FileViewer from '../../components/FileViewer';
+// @ts-ignore
+import { Map, Camera, Marker, UserLocation, GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { getSocket } from '../../services/socket';
+import * as Location from 'expo-location';
 import { startLocationSharing, stopLocationSharing, isSharingLocation } from '../../services/location';
+import LocationPicker from '../../components/LocationPicker';
 
 const whatsappWallpaper = require('../../../assets/images/whatsapp_wallpaper.png');
+
+const OSM_STYLE = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: [
+        'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      ],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: '© OpenStreetMap Contributors',
+    },
+  },
+  layers: [{ id: 'osm', type: 'raster', source: 'osm', minzoom: 0, maxzoom: 22 }],
+};
+
+const VideoMessagePlayer = ({ url }: { url: string }) => {
+  const player = useVideoPlayer(url, player => {
+    player.loop = false;
+  });
+
+  return (
+    <VideoView
+      style={{ width: 280, height: 210, borderRadius: 8, backgroundColor: '#000' }}
+      player={player}
+      allowsFullscreen
+      allowsPictureInPicture
+    />
+  );
+};
+
+const AudioMessagePlayer = ({ url, isMe }: { url: string, isMe: boolean }) => {
+  const player = useAudioPlayer(url);
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <TouchableOpacity onPress={() => player.playing ? player.pause() : player.play()}>
+        <Ionicons name={player.playing ? "pause-circle" : "play-circle"} size={36} color={isMe ? "#FFF" : "#7E57C2"} />
+      </TouchableOpacity>
+      <Text style={{ marginLeft: 8, color: isMe ? "#FFF" : "#333", fontStyle: 'italic' }}>
+        {player.playing ? "Playing..." : "Voice Message"}
+      </Text>
+    </View>
+  );
+};
 
 interface Message {
   _id: string;
@@ -167,15 +225,50 @@ export default function ChatScreen() {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [recording, setRecording] = useState<any | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
+  const [showMediaRecorder, setShowMediaRecorder] = useState(false);
   const [sound, setSound] = useState<any | null>(null);
   const [typingUser, setTypingUser] = useState('');
   const [liveLocations, setLiveLocations] = useState<{ [userId: string]: { lat: number, lng: number } }>({});
   const [isSharingLiveLoc, setIsSharingLiveLoc] = useState(false);
+  
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [mapModalCenter, setMapModalCenter] = useState<{lat: number, lng: number} | null>(null);
+  const [myLocation, setMyLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [routeData, setRouteData] = useState<any>(null);
+  const [routeDetails, setRouteDetails] = useState<{distance: string, duration: string} | null>(null);
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+  const [audioRecorderKey, setAudioRecorderKey] = useState(0);
+  const modalCameraRef = useRef<any>(null);
+  
+  // Animation for pulsing map markers
+  const pulseAnim = useRef(new Animated.Value(0)).current;
 
   const flatListRef = useRef<FlatList>(null);
+  const hasRestoredScroll = useRef(false);
   const socket = getSocket();
+
+  const handleScrollEnd = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    AsyncStorage.setItem(`scrollPos_${chatId}`, offsetY.toString());
+  };
+
+  useEffect(() => {
+    if (isGroup && token && user) {
+      api.getChats(user._id, token).then(res => {
+        const chats = res.data?.data || res.data || [];
+        const currentChat = chats.find((c: any) => c._id === chatId);
+        if (currentChat && currentChat.participants) {
+          setParticipants(currentChat.participants);
+        }
+      }).catch(err => console.log('Failed to fetch chat details for participants', err));
+    }
+  }, [isGroup, token, user, chatId]);
 
   useEffect(() => {
     if (isTyping) {
@@ -185,13 +278,59 @@ export default function ChatScreen() {
     }
   }, [isTyping]);
 
+  useEffect(() => {
+    // Start pulsing animation loop
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0, duration: 1500, useNativeDriver: true })
+      ])
+    ).start();
+  }, []);
+
+  useEffect(() => {
+    if (mapModalVisible && mapModalCenter) {
+      (async () => {
+        try {
+          // Get current user location
+          let currentLoc = liveLocations[user?._id || ''] || null;
+          if (!currentLoc) {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status === 'granted') {
+              const loc = await Location.getCurrentPositionAsync({});
+              currentLoc = { lat: loc.coords.latitude, lng: loc.coords.longitude };
+            }
+          }
+
+          if (currentLoc) {
+            setMyLocation(currentLoc);
+            // Fetch route from OSRM
+            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${currentLoc.lng},${currentLoc.lat};${mapModalCenter.lng},${mapModalCenter.lat}?overview=full&geometries=geojson`);
+            const data = await res.json();
+            if (data.routes && data.routes.length > 0) {
+              const route = data.routes[0];
+              setRouteData(route.geometry);
+              const distKm = (route.distance / 1000).toFixed(1);
+              const durMin = Math.ceil(route.duration / 60);
+              setRouteDetails({ distance: `${distKm} km`, duration: `${durMin} min` });
+            }
+          }
+        } catch (err) {
+          console.log("Routing error", err);
+        }
+      })();
+    } else {
+      setRouteData(null);
+      setRouteDetails(null);
+      setMyLocation(null);
+    }
+  }, [mapModalVisible, mapModalCenter]);
+
   const fetchMessages = async () => {
     if (!token) return;
     setLoading(true);
     try {
       const res = await api.getMessages(chatId.toString(), token);
-      // successResponse spreads data at top level: { success, data: { data: [], pagination: {} } }
-      // So the messages array lives at res.data.data
       const msgList = 
         res?.data?.data ||   // standard paginated shape
         res?.data ||         // flat array fallback
@@ -323,20 +462,84 @@ export default function ChatScreen() {
         { text: 'Cancel', style: 'cancel' },
         { text: 'Photo Library', onPress: () => pickImage(false) },
         { text: 'Document', onPress: pickDocument },
-        { text: isSharingLiveLoc ? 'Stop Live Location' : 'Share Live Location', onPress: toggleLiveLocation },
+        { text: isSharingLiveLoc ? '🔴 Stop Live Location' : '📍 Share Live Location', onPress: toggleLiveLocation },
       ]
     );
   };
 
   const toggleLiveLocation = async () => {
     if (isSharingLiveLoc) {
+      // Stop sharing directly
       await stopLocationSharing(chatId.toString());
       setIsSharingLiveLoc(false);
-    } else {
-      if (user?._id) {
-        await startLocationSharing(chatId.toString(), user._id);
-        setIsSharingLiveLoc(true);
+
+      const stopMsg: Message = {
+        _id: `local_loc_stop_${Date.now()}`,
+        chatId: chatId.toString(),
+        senderId: { _id: user?._id || '', displayName: user?.displayName || 'Me' },
+        text: 'LOCATION_STOPPED:',
+        createdAt: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, stopMsg]);
+      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+      if (socket) {
+        socket.emit('sendMessage', { chatId: chatId.toString(), text: 'LOCATION_STOPPED:' });
       }
+    } else {
+      // Open the picker instead of immediately sharing
+      setShowLocationPicker(true);
+    }
+  };
+
+  const handleLocationSelected = async (lat: number, lng: number, isLive: boolean, durationHours?: number) => {
+    if (!user?._id) return;
+
+    const processShare = async () => {
+      try {
+        if (isLive) {
+          await startLocationSharing(chatId.toString(), user._id);
+          setIsSharingLiveLoc(true);
+        }
+
+        const textPayload = isLive ? `LOCATION:${lat},${lng}:${durationHours || 0}` : `STATIC_LOCATION:${lat},${lng}`;
+
+        const locMsg: Message = {
+          _id: `local_loc_${Date.now()}`,
+          chatId: chatId.toString(),
+          senderId: { _id: user._id, displayName: user.displayName || 'Me' },
+          text: textPayload,
+          createdAt: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, locMsg]);
+        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+
+        if (socket) {
+          socket.emit('sendMessage', { chatId: chatId.toString(), text: textPayload });
+        }
+      } catch (e) {
+        console.log('Error starting location share:', e);
+      }
+    };
+
+    if (isLive && isSharingLiveLoc) {
+      Alert.alert(
+        "Already Sharing",
+        "You are already sharing a live location. Do you want to stop the existing one and share this new one?",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Yes, Replace", 
+            style: "destructive",
+            onPress: () => {
+              // We could emit a stop message here if we wanted to gracefully end the old one in chat history
+              // but startLocationSharing will overwrite the current live location in the backend/socket state anyway.
+              processShare();
+            }
+          }
+        ]
+      );
+    } else {
+      processShare();
     }
   };
 
@@ -365,7 +568,7 @@ export default function ChatScreen() {
     }
   };
 
-  const uploadAndSendMedia = async (uri: string, type: 'image' | 'file' | 'audio', fileName: string) => {
+  const uploadAndSendMedia = async (uri: string, type: 'image' | 'file' | 'audio' | 'video', fileName: string) => {
     if (!token) return;
     setLoading(true);
     try {
@@ -392,43 +595,20 @@ export default function ChatScreen() {
   };
 
   const handleCamera = () => {
-    pickImage(true);
+    setShowMediaRecorder(true);
   };
 
-  const startRecording = async () => {
-    try {
-      // const perm = await Audio.requestPermissionsAsync();
-      // if (perm.status === 'granted') {
-      //   await Audio.setAudioModeAsync({
-      //     allowsRecordingIOS: true,
-      //     playsInSilentModeIOS: true,
-      //   });
-      //   const { recording } = await Audio.Recording.createAsync(
-      //     Audio.RecordingOptionsPresets.HIGH_QUALITY
-      //   );
-      //   setRecording(recording);
-      //   setIsRecording(true);
-      // }
-      console.log('Audio recording temporarily disabled');
-    } catch (err) {
-      console.error('Failed to start recording', err);
-      setIsRecording(false);
-    }
+  const handleMediaCaptured = (uri: string, type: 'photo' | 'video') => {
+    uploadAndSendMedia(uri, type === 'photo' ? 'image' : 'video', `capture.${type === 'photo' ? 'jpg' : 'mp4'}`);
   };
 
-  const stopRecording = async () => {
-    setIsRecording(false);
-    if (!recording) return;
-    try {
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      setRecording(null);
-      if (uri) {
-        uploadAndSendMedia(uri, 'audio', 'voice-message.m4a');
-      }
-    } catch (error) {
-      console.error('Failed to stop recording', error);
-    }
+  const handleAudioSend = (uri: string) => {
+    uploadAndSendMedia(uri, 'audio', 'voice-message.m4a');
+    setAudioRecorderKey(prev => prev + 1);
+  };
+
+  const handleAudioCancel = () => {
+    setAudioRecorderKey(prev => prev + 1);
   };
 
   const playSound = async (uri: string) => {
@@ -443,12 +623,29 @@ export default function ChatScreen() {
 
   const handleTyping = (text: string) => {
     setInputText(text);
+
+    if (isGroup) {
+      const match = text.match(/@(\w*)$/);
+      if (match) {
+        setShowMentions(true);
+        setMentionQuery(match[1].toLowerCase());
+      } else {
+        setShowMentions(false);
+      }
+    }
+
     if (!socket) return;
     if (text.length > 0) {
       socket.emit('typing', chatId);
     } else {
       socket.emit('stopTyping', chatId);
     }
+  };
+
+  const handleMentionSelect = (userToMention: any) => {
+    const newText = inputText.replace(/@\w*$/, `@${userToMention.displayName} `);
+    setInputText(newText);
+    setShowMentions(false);
   };
 
   const formatMessageTime = (isoString: string) => {
@@ -584,10 +781,138 @@ export default function ChatScreen() {
               keyExtractor={item => item._id}
               contentContainerStyle={styles.messagesList}
               keyboardShouldPersistTaps="handled"
-              onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+              onMomentumScrollEnd={handleScrollEnd}
+              onScrollEndDrag={handleScrollEnd}
+              onLayout={() => {
+                if (hasRestoredScroll.current) return;
+                hasRestoredScroll.current = true;
+                setTimeout(async () => {
+                  try {
+                    const savedOffset = await AsyncStorage.getItem(`scrollPos_${chatId}`);
+                    if (savedOffset !== null) {
+                      flatListRef.current?.scrollToOffset({ offset: parseFloat(savedOffset), animated: false });
+                    } else {
+                      flatListRef.current?.scrollToEnd({ animated: false });
+                    }
+                  } catch (e) {
+                    flatListRef.current?.scrollToEnd({ animated: false });
+                  }
+                }, 150);
+              }}
               renderItem={({ item }) => {
                 const isMe = item.senderId._id === 'current-user' || item.senderId._id === user?._id;
+
+                // Render Location Share Message Card
+                const isLocationMsg = item.text?.startsWith('LOCATION:');
+                const isStaticLocationMsg = item.text?.startsWith('STATIC_LOCATION:');
+                const isLocationStopped = item.text?.startsWith('LOCATION_STOPPED:');
                 
+                if (isLocationMsg || isStaticLocationMsg || isLocationStopped) {
+                  let lat = 0, lng = 0, durationHours = 0;
+                  if (isLocationMsg) {
+                    const parts = item.text!.substring(9).split(':');
+                    const coords = parts[0].split(',');
+                    lat = parseFloat(coords[0]) || 0;
+                    lng = parseFloat(coords[1]) || 0;
+                    durationHours = parseInt(parts[1] || '0', 10);
+                  } else if (isStaticLocationMsg) {
+                    const coords = item.text!.substring(16).split(',');
+                    lat = parseFloat(coords[0]) || 0;
+                    lng = parseFloat(coords[1]) || 0;
+                  }
+
+                  return (
+                    <View style={[styles.messageBubble, isMe ? styles.outgoingBubble : styles.incomingBubble, { maxWidth: '80%', padding: 0, overflow: 'hidden' }]}>
+                      {!isMe && isGroup && (
+                        <Text style={[styles.senderName, { color: getParticipantColor(item.senderId.displayName), padding: 8, paddingBottom: 4 }]}>
+                          {item.senderId.displayName}
+                        </Text>
+                      )}
+                      {isLocationStopped ? (
+                        <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                          <Ionicons name="navigate-outline" size={28} color={isMe ? '#FFF' : '#666'} />
+                          <View>
+                            <Text style={{ color: isMe ? '#FFF' : '#333', fontWeight: '600', fontSize: 14 }}>Live location ended</Text>
+                            <Text style={{ color: isMe ? 'rgba(255,255,255,0.7)' : '#999', fontSize: 12 }}>{formatMessageTime(item.createdAt)}</Text>
+                          </View>
+                        </View>
+                      ) : (
+                        <>
+                          <TouchableOpacity 
+                            activeOpacity={0.8}
+                            onPress={() => {
+                              setMapModalCenter({ lat, lng });
+                              setMapModalVisible(true);
+                            }}
+                          >
+                            <View style={{ width: '100%', height: 150, backgroundColor: '#E8EAF6', justifyContent: 'center', alignItems: 'center' }}>
+                              <View pointerEvents="none" style={{ width: '100%', height: '100%', position: 'absolute' }}>
+                                <Map
+                                  style={{ flex: 1 }}
+                                  mapStyle={OSM_STYLE}
+                                  scrollEnabled={false}
+                                  pitchEnabled={false}
+                                  rotateEnabled={false}
+                                  zoomEnabled={false}
+                                >
+                                  <Camera
+                                    initialViewState={{
+                                      center: [lng, lat] as [number, number],
+                                      zoom: 18,
+                                    }}
+                                  />
+                                  <Marker id="mini-marker" lngLat={[lng, lat]}>
+                                    <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: -12 }}>
+                                      <Ionicons name="pin" size={24} color="#E53935" />
+                                    </View>
+                                  </Marker>
+                                </Map>
+                              </View>
+                              <View style={{ position: 'absolute', backgroundColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}>
+                                <Text style={{ color: '#5C6BC0', fontWeight: '700', fontSize: 12 }}>Tap to view full map</Text>
+                              </View>
+                            </View>
+                            <View style={{ padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Ionicons name={isStaticLocationMsg ? "pin" : "navigate"} size={18} color={isMe ? '#FFF' : (isStaticLocationMsg ? '#7E57C2' : '#00C853')} />
+                              <View>
+                                <Text style={{ color: isMe ? '#FFF' : '#333', fontWeight: '700', fontSize: 13 }}>
+                                  {isStaticLocationMsg ? 'Location' : 'Live Location'}
+                                </Text>
+                                <Text style={{ color: isMe ? 'rgba(255,255,255,0.7)' : '#888', fontSize: 11 }}>
+                                  {lat.toFixed(4)}, {lng.toFixed(4)}
+                                </Text>
+                              </View>
+                            </View>
+                            {isLocationMsg && (
+                              <View style={{ backgroundColor: '#00C853', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                                <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>LIVE</Text>
+                              </View>
+                            )}
+                          </View>
+                          
+                          {isLocationMsg && durationHours > 0 && (
+                            <Text style={{ paddingHorizontal: 10, fontSize: 11, color: isMe ? 'rgba(255,255,255,0.8)' : '#777', fontStyle: 'italic' }}>
+                              Sharing for {durationHours} hour{durationHours > 1 ? 's' : ''}
+                            </Text>
+                          )}
+                          <Text style={[styles.attachmentTime, { paddingHorizontal: 10, paddingBottom: 6 }]}>{formatMessageTime(item.createdAt)}</Text>
+                          </TouchableOpacity>
+
+                          {isLocationMsg && isMe && isSharingLiveLoc && (
+                            <TouchableOpacity 
+                              style={{ borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', padding: 12, alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.1)' }}
+                              onPress={toggleLiveLocation}
+                            >
+                              <Text style={{ color: '#FFF', fontWeight: '700' }}>Stop Sharing</Text>
+                            </TouchableOpacity>
+                          )}
+                        </>
+                      )}
+                    </View>
+                  );
+                }
+
                 // Render custom Call Logs in the Chat History
                 const isCallLog = item.text?.startsWith('CALL_LOG:');
                 if (isCallLog) {
@@ -678,14 +1003,7 @@ export default function ChatScreen() {
                             {item.senderId.displayName}
                           </Text>
                         )}
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <TouchableOpacity onPress={() => playSound(attachment.url!)}>
-                            <Ionicons name="play-circle" size={36} color={isMe ? "#FFF" : "#7E57C2"} />
-                          </TouchableOpacity>
-                          <Text style={{ marginLeft: 8, color: isMe ? "#FFF" : "#333", fontStyle: 'italic' }}>
-                            Voice Message
-                          </Text>
-                        </View>
+                        <AudioMessagePlayer url={attachment.url!} isMe={isMe} />
                         <Text style={styles.attachmentTime}>{formatMessageTime(item.createdAt)}</Text>
                       </View>
                     );
@@ -699,7 +1017,23 @@ export default function ChatScreen() {
                             {item.senderId.displayName}
                           </Text>
                         )}
-                        <Image source={{ uri: attachment.url }} style={{ width: 220, height: 220, borderRadius: 8 }} />
+                        <TouchableOpacity onPress={() => setFullScreenImage(attachment.url || null)}>
+                          <Image source={{ uri: attachment.url }} style={{ width: 220, height: 220, borderRadius: 8 }} />
+                        </TouchableOpacity>
+                        <Text style={[styles.attachmentTime, { marginRight: 4 }]}>{formatMessageTime(item.createdAt)}</Text>
+                      </View>
+                    );
+                  }
+
+                  if (attachment.type === 'video') {
+                    return (
+                      <View style={[styles.messageBubble, isMe ? styles.outgoingBubble : styles.incomingBubble, { maxWidth: '85%', padding: 4 }]}>
+                        {!isMe && isGroup && (
+                          <Text style={[styles.senderName, { color: getParticipantColor(item.senderId.displayName), marginLeft: 4 }]}>
+                            {item.senderId.displayName}
+                          </Text>
+                        )}
+                        <VideoMessagePlayer url={attachment.url!} />
                         <Text style={[styles.attachmentTime, { marginRight: 4 }]}>{formatMessageTime(item.createdAt)}</Text>
                       </View>
                     );
@@ -713,16 +1047,7 @@ export default function ChatScreen() {
                           {item.senderId.displayName}
                         </Text>
                       )}
-                      <View style={styles.pdfContainer}>
-                        <View style={styles.pdfIconContainer}>
-                          <Ionicons name="document-text" size={24} color="#FFF" />
-                          <Text style={styles.pdfIconBadgeText}>FILE</Text>
-                        </View>
-                        <View style={styles.pdfMeta}>
-                          <Text style={styles.pdfName} numberOfLines={1}>{attachment.name}</Text>
-                          <Text style={styles.pdfSize}>{attachment.size || 'Unknown size'}</Text>
-                        </View>
-                      </View>
+                      <FileViewer file={{ uri: attachment.url!, name: attachment.name, mimeType: attachment.type || 'application/octet-stream' }} />
                       <Text style={styles.attachmentTime}>{formatMessageTime(item.createdAt)}</Text>
                     </View>
                   );
@@ -764,54 +1089,285 @@ export default function ChatScreen() {
             />
           )}
 
-          {/* Input Bar */}
-          <View style={styles.inputBar}>
-            <TouchableOpacity style={styles.inputIconBtn}>
-              <Ionicons name="happy-outline" size={24} color="#666" />
-            </TouchableOpacity>
-            
-            {isRecording ? (
-              <View style={[styles.textInput, { justifyContent: 'center', backgroundColor: '#FFEBEE' }]}>
-                <Text style={{ color: '#D32F2F', fontWeight: 'bold' }}>Recording... Release to send</Text>
-              </View>
-            ) : (
-              <TextInput
-                style={styles.textInput}
-                placeholder="Type a message..."
-                placeholderTextColor="#999"
-                multiline
-                value={inputText}
-                onChangeText={handleTyping}
-                onSubmitEditing={handleSend}
-                blurOnSubmit={false}
-                returnKeyType="send"
+          {/* Mentions List */}
+          {showMentions && (
+            <View style={{ backgroundColor: '#FFF', maxHeight: 150, borderTopWidth: 1, borderColor: '#EEE' }}>
+              <FlatList
+                data={participants.filter(p => (p.displayName || '').toLowerCase().includes(mentionQuery) && p._id !== user?._id)}
+                keyExtractor={item => item._id}
+                keyboardShouldPersistTaps="always"
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={{ padding: 12, borderBottomWidth: 1, borderColor: '#EEE', flexDirection: 'row', alignItems: 'center' }}
+                    onPress={() => handleMentionSelect(item)}
+                  >
+                    {item.profileImage ? (
+                      <Image source={{ uri: item.profileImage }} style={{ width: 30, height: 30, borderRadius: 15, marginRight: 10 }} />
+                    ) : (
+                      <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: '#7E57C2', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+                        <Text style={{ color: '#FFF' }}>{item.displayName?.charAt(0)}</Text>
+                      </View>
+                    )}
+                    <Text style={{ fontSize: 16, color: '#333' }}>{item.displayName}</Text>
+                  </TouchableOpacity>
+                )}
               />
-            )}
-            
-            <TouchableOpacity style={styles.inputIconBtn} onPress={handleAttachMedia} disabled={isRecording}>
-              <Ionicons name="attach-outline" size={24} color="#666" />
-            </TouchableOpacity>
+            </View>
+          )}
 
-            {inputText.length === 0 && (
-              <TouchableOpacity style={styles.inputIconBtn} onPress={handleCamera}>
-                <Ionicons name="camera-outline" size={24} color="#666" />
+          {/* Expandable Attachment Menu */}
+          {showAttachmentMenu && (
+            <Animated.View style={styles.attachmentMenu}>
+              <TouchableOpacity style={styles.attachmentMenuItem} onPress={() => { setShowAttachmentMenu(false); pickDocument(); }}>
+                <View style={[styles.attachmentMenuIcon, { backgroundColor: '#5C6BC0' }]}>
+                  <Ionicons name="document-text" size={24} color="#FFF" />
+                </View>
+                <Text style={styles.attachmentMenuText}>Document</Text>
               </TouchableOpacity>
-            )}
+              <TouchableOpacity style={styles.attachmentMenuItem} onPress={() => { setShowAttachmentMenu(false); handleCamera(); }}>
+                <View style={[styles.attachmentMenuIcon, { backgroundColor: '#E91E63' }]}>
+                  <Ionicons name="camera" size={24} color="#FFF" />
+                </View>
+                <Text style={styles.attachmentMenuText}>Camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.attachmentMenuItem} onPress={() => { setShowAttachmentMenu(false); pickImage(false); }}>
+                <View style={[styles.attachmentMenuIcon, { backgroundColor: '#9C27B0' }]}>
+                  <Ionicons name="image" size={24} color="#FFF" />
+                </View>
+                <Text style={styles.attachmentMenuText}>Gallery</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.attachmentMenuItem} onPress={() => { setShowAttachmentMenu(false); toggleLiveLocation(); }}>
+                <View style={[styles.attachmentMenuIcon, { backgroundColor: isSharingLiveLoc ? '#FF3B30' : '#4CAF50' }]}>
+                  <Ionicons name={isSharingLiveLoc ? "stop-circle" : "location"} size={24} color="#FFF" />
+                </View>
+                <Text style={styles.attachmentMenuText}>{isSharingLiveLoc ? "Stop Sharing" : "Location"}</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
 
+          {/* Input Bar */}
+          <View style={styles.inputContainer}>
             <TouchableOpacity 
-              style={[styles.sendBtn, isRecording && { backgroundColor: '#D32F2F', transform: [{ scale: 1.2 }] }]}
-              onPress={inputText.length > 0 ? handleSend : undefined}
-              onPressIn={inputText.length === 0 ? startRecording : undefined}
-              onPressOut={inputText.length === 0 ? stopRecording : undefined}
-              delayPressIn={0}
+              style={[styles.inputIconBtn, isEmojiPickerOpen && { backgroundColor: '#E8EAF6', borderRadius: 20 }]} 
+              onPress={() => setIsEmojiPickerOpen(true)}
             >
-              <Ionicons 
-                name={inputText.length > 0 ? "send" : "mic"} 
-                size={20} 
-                color="#FFF" 
-              />
+              <Ionicons name="happy-outline" size={26} color={isEmojiPickerOpen ? "#5C6BC0" : "#666"} />
             </TouchableOpacity>
+            
+            <TextInput
+              style={styles.textInput}
+              placeholder="Message..."
+              placeholderTextColor="#999"
+              multiline
+              value={inputText}
+              onChangeText={handleTyping}
+              onSubmitEditing={handleSend}
+              blurOnSubmit={false}
+              returnKeyType="send"
+            />
+            
+            <TouchableOpacity 
+              style={[styles.inputIconBtn, showAttachmentMenu && { backgroundColor: '#E8EAF6', borderRadius: 20 }]} 
+              onPress={() => setShowAttachmentMenu(!showAttachmentMenu)}
+            >
+              <Ionicons name="add" size={28} color={showAttachmentMenu ? "#5C6BC0" : "#666"} />
+            </TouchableOpacity>
+
+            {inputText.length > 0 ? (
+              <TouchableOpacity 
+                style={styles.sendBtn}
+                onPress={handleSend}
+              >
+                <Ionicons name="send" size={20} color="#FFF" />
+              </TouchableOpacity>
+            ) : (
+              <AudioRecorder key={audioRecorderKey} onSend={handleAudioSend} onCancel={handleAudioCancel} />
+            )}
           </View>
+          
+          <MediaRecorder 
+            visible={showMediaRecorder} 
+            onClose={() => setShowMediaRecorder(false)} 
+            onMediaCaptured={handleMediaCaptured} 
+          />
+          <LocationPicker
+            visible={showLocationPicker}
+            onClose={() => setShowLocationPicker(false)}
+            onShareLocation={handleLocationSelected}
+          />
+          <Modal visible={mapModalVisible} animationType="slide" transparent={true}>
+            <View style={{ flex: 1, backgroundColor: '#FFF' }}>
+              <Map
+                style={{ flex: 1 }}
+                mapStyle={OSM_STYLE}
+                logoEnabled={false}
+              >
+                <Camera
+                  ref={modalCameraRef}
+                  initialViewState={{
+                    center: [mapModalCenter?.lng || 0, mapModalCenter?.lat || 0] as [number, number],
+                    zoom: 17,
+                  }}
+                />
+                
+                {/* User's true live location with calibration heading cone */}
+                <UserLocation 
+                  visible={true} 
+                  showsUserHeadingIndicator={true} 
+                />
+
+                {/* Render Directions Line if Route Exists */}
+                {routeData && (
+                  <GeoJSONSource id="routeSource" data={routeData}>
+                    <Layer 
+                      id="routeFill" 
+                      type="line"
+                      style={{ 
+                        lineColor: '#7E57C2', 
+                        lineWidth: 5, 
+                        lineCap: 'round', 
+                        lineJoin: 'round' 
+                      }} 
+                    />
+                  </GeoJSONSource>
+                )}
+
+                {/* Tapped Location Marker (Animating Dot instead of Pin) */}
+                {mapModalCenter && (
+                  <Marker
+                    id="tapped-loc"
+                    lngLat={[mapModalCenter.lng, mapModalCenter.lat]}
+                  >
+                    <View style={styles.tappedMarker}>
+                      <Animated.View style={{
+                        position: 'absolute',
+                        width: 40, height: 40, borderRadius: 20, backgroundColor: '#E53935',
+                        opacity: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }),
+                        transform: [{ scale: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 2] }) }]
+                      }} />
+                      <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#E53935', borderWidth: 2, borderColor: '#FFF' }} />
+                    </View>
+                  </Marker>
+                )}
+
+                {/* Draw all live locations */}
+                {Object.keys(liveLocations).map(uid => {
+                  const loc = liveLocations[uid];
+                  const participant = participants.find(p => p._id === uid) || (uid === user?._id ? user : null);
+                  if (!participant) return null;
+                  const initial = participant.displayName ? participant.displayName.charAt(0).toUpperCase() : 'U';
+                  return (
+                    <Marker key={uid} id={`user-${uid}`} lngLat={[loc.lng, loc.lat]}>
+                      <View style={styles.liveUserMarker}>
+                        <Animated.View style={{
+                          position: 'absolute',
+                          width: 50, height: 50, borderRadius: 25, backgroundColor: '#00C853',
+                          opacity: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0] }),
+                          transform: [{ scale: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.5] }) }]
+                        }} />
+                        <View style={styles.liveUserMarkerPointer} />
+                        {participant.profileImage ? (
+                          <Image source={{ uri: participant.profileImage }} style={styles.liveUserAvatar} />
+                        ) : (
+                          <View style={styles.liveUserInitialContainer}>
+                            <Text style={styles.liveUserInitial}>{initial}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </Marker>
+                  );
+                })}
+
+                {/* My Own Location Animating Avatar (if not actively in liveLocations) */}
+                {myLocation && !liveLocations[user?._id || ''] && (
+                  <Marker id="my-loc" lngLat={[myLocation.lng, myLocation.lat]}>
+                    <View style={styles.liveUserMarker}>
+                      <Animated.View style={{
+                        position: 'absolute',
+                        width: 50, height: 50, borderRadius: 25, backgroundColor: '#2196F3', // Blue pulse for self
+                        opacity: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0] }),
+                        transform: [{ scale: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.5] }) }]
+                      }} />
+                      <View style={[styles.liveUserMarkerPointer, { borderTopColor: '#2196F3' }]} />
+                      {user?.profileImage ? (
+                        <Image source={{ uri: user.profileImage }} style={[styles.liveUserAvatar, { borderColor: '#2196F3', borderWidth: 2 }]} />
+                      ) : (
+                        <View style={[styles.liveUserInitialContainer, { backgroundColor: '#2196F3' }]}>
+                          <Text style={styles.liveUserInitial}>{user?.displayName?.charAt(0).toUpperCase() || 'M'}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </Marker>
+                )}
+              </Map>
+
+              {/* Floating Glassmorphic Header */}
+              <View style={styles.floatingMapHeader}>
+                <TouchableOpacity onPress={() => setMapModalVisible(false)} style={styles.floatingMapBackBtn}>
+                  <Ionicons name="close" size={26} color="#333" />
+                </TouchableOpacity>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={styles.floatingMapTitle}>Location Map</Text>
+                  {routeDetails && (
+                    <Text style={{ fontSize: 12, color: '#7E57C2', fontWeight: '600', marginTop: 2 }}>
+                      {routeDetails.distance} • {routeDetails.duration} away
+                    </Text>
+                  )}
+                </View>
+                <View style={{ width: 40 }} />
+              </View>
+
+              {/* Recenter Button */}
+              <TouchableOpacity 
+                style={styles.recenterMapBtn}
+                onPress={() => {
+                  if (mapModalCenter) {
+                    modalCameraRef.current?.flyTo({
+                      center: [mapModalCenter.lng, mapModalCenter.lat],
+                      zoom: 18,
+                      duration: 800
+                    });
+                  }
+                }}
+              >
+                <Ionicons name="locate" size={24} color="#7E57C2" />
+              </TouchableOpacity>
+              {/* Stop Sharing Button (Only visible if actively sharing) */}
+              {isSharingLiveLoc && (
+                <TouchableOpacity 
+                  style={styles.floatingStopShareBtn}
+                  onPress={toggleLiveLocation}
+                >
+                  <View style={styles.stopSharePulse} />
+                  <Text style={styles.stopShareText}>Stop Sharing</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </Modal>
+
+          {/* Full Screen Image Viewer */}
+          <Modal visible={!!fullScreenImage} animationType="fade" transparent={true}>
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' }}>
+              <TouchableOpacity 
+                style={{ position: 'absolute', top: Platform.OS === 'ios' ? 50 : 30, right: 20, zIndex: 10, padding: 10, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 25 }}
+                onPress={() => setFullScreenImage(null)}
+              >
+                <Ionicons name="close" size={30} color="#FFF" />
+              </TouchableOpacity>
+              {fullScreenImage && (
+                <Image source={{ uri: fullScreenImage }} style={{ width: '100%', height: '80%' }} resizeMode="contain" />
+              )}
+            </View>
+          </Modal>
+
+          <EmojiPicker 
+            open={isEmojiPickerOpen} 
+            onClose={() => setIsEmojiPickerOpen(false)} 
+            onEmojiSelected={(emojiObject) => {
+              setInputText(prev => prev + emojiObject.emoji);
+            }}
+          />
+
         </ImageBackground>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -828,11 +1384,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingTop: Platform.OS === 'android' ? 40 : 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    backgroundColor: '#FFF',
+    paddingTop: Platform.OS === 'android' ? 44 : 12,
+    paddingBottom: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderBottomWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+    zIndex: 10,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -840,7 +1401,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
-    padding: 4,
+    padding: 6,
     marginRight: 4,
   },
   profileBtn: {
@@ -863,9 +1424,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chatName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
     color: '#111',
+    letterSpacing: -0.3,
   },
   chatStatus: {
     fontSize: 12,
@@ -882,12 +1444,12 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: '#E5DDD5', // Classic WhatsApp beige color
+    backgroundColor: '#F7F7F8', // Modern clean light gray
   },
   wallpaperOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: '#000',
-    opacity: 0.03,
+    backgroundColor: '#FFF',
+    opacity: 0.6, // Soften the wallpaper to make bubbles pop
   },
   loadingContainer: {
     flex: 1,
@@ -896,28 +1458,31 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     padding: 16,
-    paddingBottom: 8,
+    paddingBottom: 20,
   },
   messageBubble: {
-    borderRadius: 10,
-    padding: 8,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    elevation: 1,
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 6,
+    maxWidth: '82%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
   incomingBubble: {
     backgroundColor: '#FFF',
     alignSelf: 'flex-start',
-    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
   outgoingBubble: {
-    backgroundColor: '#F3E5F5', // WhatsApp light purple
+    backgroundColor: '#7E57C2', // Deep vibrant purple
     alignSelf: 'flex-end',
-    borderTopRightRadius: 0,
+    borderBottomRightRadius: 4,
   },
   senderName: {
     fontSize: 12,
@@ -925,9 +1490,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   messageText: {
-    fontSize: 15,
-    color: '#303030',
-    lineHeight: 20,
+    fontSize: 16,
+    color: '#111',
+    lineHeight: 22,
+    letterSpacing: -0.2,
   },
   messageMeta: {
     flexDirection: 'row',
@@ -935,7 +1501,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignSelf: 'flex-end',
     marginTop: 4,
-    minWidth: 50,
+    minWidth: 40,
   },
   messageTime: {
     fontSize: 11,
@@ -943,7 +1509,44 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   checkIcon: {
-    marginLeft: 2,
+    marginLeft: 4,
+  },
+  attachmentMenu: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#FFF',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  attachmentMenuItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  attachmentMenuIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  attachmentMenuText: {
+    fontSize: 12,
+    color: '#333',
+    fontWeight: '500',
   },
   pdfContainer: {
     flexDirection: 'row',
@@ -971,6 +1574,135 @@ const styles = StyleSheet.create({
   pdfMeta: {
     flex: 1,
   },
+  audioCancelText: {
+    color: '#FF3B30',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  tappedMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -16, // Center pin exactly
+  },
+  liveUserMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#00C853',
+    borderWidth: 2,
+    borderColor: '#FFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  liveUserMarkerPointer: {
+    position: 'absolute',
+    bottom: -6,
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#00C853',
+  },
+  liveUserAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+  },
+  liveUserInitialContainer: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#7E57C2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  liveUserInitial: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  floatingMapHeader: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 44 : 50,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderRadius: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  floatingMapBackBtn: {
+    padding: 6,
+    backgroundColor: '#F3F0FF',
+    borderRadius: 20,
+  },
+  floatingMapTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111',
+  },
+  recenterMapBtn: {
+    position: 'absolute',
+    bottom: 40,
+    right: 20,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  floatingStopShareBtn: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 30,
+    shadowColor: '#FF3B30',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    gap: 8,
+  },
+  stopSharePulse: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FFF',
+  },
+  stopShareText: {
+    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 15,
+  },
   pdfName: {
     fontSize: 14,
     fontWeight: '600',
@@ -987,36 +1719,51 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     marginTop: 6,
   },
-  inputBar: {
+  inputContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    backgroundColor: '#F0F0F0',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    alignItems: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: 'transparent',
+    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
   },
   inputIconBtn: {
-    padding: 8,
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   textInput: {
     flex: 1,
     backgroundColor: '#FFF',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 12,
     fontSize: 16,
-    maxHeight: 100,
+    maxHeight: 120,
     color: '#333',
-    marginHorizontal: 4,
+    marginHorizontal: 6,
+    borderWidth: 1,
+    borderColor: '#EAEAEA',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
   },
   sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: '#7E57C2',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 4,
+    shadowColor: '#7E57C2',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   typingBubble: {
     paddingVertical: 12,

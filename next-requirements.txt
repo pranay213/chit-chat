@@ -18,3 +18,13 @@ dont push any code now
 now give all requirments of crm please 
 for manage users messages  users management
    
+
+
+now implement location sharing  timely based and always share both options for this use openstreetmap location using maplibre with using  and show my and location shared person locaton 
+ineed full map detaisl about distance journey update when moving and  route directions  and speedometer implemantion  3d and 2d views with maplibre and openstreetmap  and router
+need dark and light mode and traffice mode options  while checking the maps  
+
+next feature is work on voice record and share optin pause stop send  and then vidoe recording and share feature while clicked on the  camera need both options . then i need filters camera filtter colors modes zoom optiona all camera features hd image normal image 
+ then file viewr option in the wthatspp like voice listerner which voice send thoruht  then document viewwr pdf viewr execl viewer and other docs views txt file viewr apk installer  image vieable doc viewale based on the file  viesro and movie viewrabl
+
+and next thing is  while vidoe or audio calling we need filete we need easy switch between audio and vieso  and vidoe effect filder should add while video is workin 

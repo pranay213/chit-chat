@@ -358,6 +358,30 @@ export const api = {
   },
 
   /**
+   * Create a new group chat
+   */
+  async createGroupChat(payload: { groupName: string; participants: string[]; adminId: string }, token: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/chats/group`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create group chat');
+      }
+      return data;
+    } catch (error: any) {
+      console.error('API Error (createGroupChat):', error);
+      throw error;
+    }
+  },
+
+  /**
    * Get all messages in a chat thread
    */
   async getMessages(chatId: string, token: string): Promise<any> {

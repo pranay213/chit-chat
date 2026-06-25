@@ -344,6 +344,9 @@ const UsersPage = () => {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+  const [showModal, setShowModal] = useState(false);
+  const [newUser, setNewUser] = useState({ email: '', mobileNumber: '', password: '', displayName: '', username: '' });
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -381,6 +384,22 @@ const UsersPage = () => {
     setSearchParams(searchParams);
   };
 
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await axios.post(`${API_URL}/users`, newUser);
+      alert('User created successfully');
+      setShowModal(false);
+      setNewUser({ email: '', mobileNumber: '', password: '', displayName: '', username: '' });
+      fetchUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to create user');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Layout>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -396,7 +415,7 @@ const UsersPage = () => {
               style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none' }} 
             />
           </form>
-          <button className="btn btn-primary hide-on-mobile">Add New User</button>
+          <button className="btn btn-primary hide-on-mobile" onClick={() => setShowModal(true)}>Add New User</button>
         </div>
       </div>
       
@@ -439,6 +458,35 @@ const UsersPage = () => {
                       >
                         {u.accountStatus === 'blocked' ? 'Unblock' : 'Block'}
                       </button>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this user completely?')) {
+                            axios.delete(`${API_URL}/users/${u._id}`)
+                              .then(() => fetchUsers())
+                              .catch(() => alert('Failed to delete user'));
+                          }
+                        }}
+                        className="btn"
+                        style={{ padding: '4px 8px', fontSize: '0.75rem', marginLeft: '8px', background: 'var(--danger)' }}
+                      >
+                        Delete
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const title = window.prompt('Enter notification title:', 'CRM Alert');
+                          if (!title) return;
+                          const body = window.prompt('Enter notification message:', 'Hello from Chit-Chat CRM!');
+                          if (!body) return;
+                          
+                          axios.post(`${API_URL}/users/${u._id}/notify`, { title, body })
+                            .then(() => alert('Push notification sent successfully!'))
+                            .catch((err) => alert(err.response?.data?.message || 'Failed to send notification. User might not have a push token.'));
+                        }}
+                        className="btn"
+                        style={{ padding: '4px 8px', fontSize: '0.75rem', marginLeft: '8px', background: 'var(--accent-primary)' }}
+                      >
+                        Ping
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -464,6 +512,42 @@ const UsersPage = () => {
           </div>
         )}
       </div>
+
+      {showModal && (
+        <div className="sidebar-overlay open" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowModal(false)}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '400px', margin: '20px' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ marginBottom: '1.5rem' }}>Add New User</h2>
+            <form onSubmit={handleAddUser}>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input type="email" className="form-input" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Mobile Number</label>
+                <input type="text" className="form-input" value={newUser.mobileNumber} onChange={e => setNewUser({...newUser, mobileNumber: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Username</label>
+                <input type="text" className="form-input" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Display Name</label>
+                <input type="text" className="form-input" value={newUser.displayName} onChange={e => setNewUser({...newUser, displayName: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Password *</label>
+                <input type="password" required className="form-input" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                <button type="button" className="btn" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };
@@ -567,18 +651,44 @@ const SettingsPage = () => {
 const ChatPreviewPage = () => {
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
-  useEffect(() => {
-    // Assuming backend endpoint /admin/chats exists, otherwise this will fail gracefully
+  const fetchChats = () => {
     axios.get(`${API_URL}/chats`)
       .then(res => setChats(res.data.data?.data || res.data.data || []))
       .catch(err => console.error("Error fetching chats", err))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchChats();
   }, []);
+
+  const viewChatHistory = async (chatId: string) => {
+    const chat = chats.find(c => c._id === chatId);
+    setSelectedChat(chat);
+    setLoadingMessages(true);
+    try {
+      // Use general chat endpoint to get messages (assuming API allows admin to read messages or we fallback)
+      const API_BASE = API_URL.replace('/admin', '');
+      const res = await axios.get(`${API_BASE}/chats/${chatId}/messages`);
+      setMessages(res.data.data || res.data.messages || res.data || []);
+    } catch (err) {
+      console.error("Error fetching messages", err);
+      // Fallback empty array
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
 
   return (
     <Layout>
-      <h1>Global Chat Moderation</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h1>Global Chat Moderation</h1>
+      </div>
       {loading ? <Loader /> : (
         <div className="glass-card" style={{ marginTop: '1rem' }}>
           <div className="table-container">
@@ -604,7 +714,20 @@ const ChatPreviewPage = () => {
                       {chat.lastMessage?.text || (chat.lastMessage?.attachments?.length ? 'Media attached' : 'No messages')}
                     </td>
                     <td>
-                      <button className="btn btn-primary" style={{ padding: '4px 8px', fontSize: '0.75rem' }}>View History</button>
+                      <button className="btn btn-primary" onClick={() => viewChatHistory(chat._id)} style={{ padding: '4px 8px', fontSize: '0.75rem' }}>View History</button>
+                      <button 
+                        className="btn" 
+                        onClick={() => {
+                          if(window.confirm('Are you sure you want to delete this chat thread globally?')) {
+                            axios.delete(`${API_URL}/chats/${chat._id}`)
+                              .then(() => fetchChats())
+                              .catch(err => alert('Failed to delete chat'));
+                          }
+                        }}
+                        style={{ padding: '4px 8px', fontSize: '0.75rem', background: 'var(--danger)', marginLeft: '8px' }}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -618,6 +741,37 @@ const ChatPreviewPage = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {selectedChat && (
+        <div className="sidebar-overlay open" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setSelectedChat(null)}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '600px', maxHeight: '80vh', margin: '20px', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border)' }}>
+              <h2>Chat History</h2>
+              <button onClick={() => setSelectedChat(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><X size={24} /></button>
+            </div>
+            
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {loadingMessages ? <Loader /> : messages.length === 0 ? (
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No messages found in this chat.</p>
+              ) : (
+                messages.map((msg: any) => (
+                  <div key={msg._id} style={{ background: 'var(--bg-primary)', padding: '10px 15px', borderRadius: '8px', alignSelf: 'flex-start', maxWidth: '85%' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 'bold' }}>
+                      {msg.senderId?.displayName || msg.senderId?.mobileNumber || 'Unknown'} - {new Date(msg.createdAt).toLocaleString()}
+                    </div>
+                    {msg.text && <p style={{ margin: 0 }}>{msg.text}</p>}
+                    {msg.attachments?.length > 0 && (
+                      <div style={{ marginTop: '8px' }}>
+                        <span className="badge badge-primary">Contains Media</span>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
