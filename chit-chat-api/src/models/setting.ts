@@ -6,8 +6,8 @@ export interface ISetting extends Document {
   smtpUser?: string;
   smtpPass?: string;
   smtpFromEmail?: string;
-  // Fast2SMS settings
-  fast2smsApiKey?: string;
+  // SMS Gateway settings
+  smsGatewayApiKey?: string;
   updatedBy?: mongoose.Types.ObjectId; // Reference to Admin
   createdAt: Date;
   updatedAt: Date;
@@ -18,7 +18,7 @@ const SettingSchema: Schema = new Schema({
   smtpUser: { type: String },
   smtpPass: { type: String },
   smtpFromEmail: { type: String },
-  fast2smsApiKey: { type: String },
+  smsGatewayApiKey: { type: String },
   updatedBy: { type: Schema.Types.ObjectId, ref: 'Admin' }
 }, { timestamps: true });
 export const Setting = mongoose.model<ISetting>('Setting', SettingSchema);

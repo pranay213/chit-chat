@@ -41,23 +41,25 @@ export const generateAndSendOtp = async (identifier: string, type: 'email' | 'mo
       throw new Error('Failed to send email OTP');
     }
   } else if (type === 'mobile') {
-    if (!settings?.fast2smsApiKey) {
-       logger.warn('Fast2SMS API Key is not configured in settings.');
+    if (!settings?.smsGatewayApiKey) {
+       logger.warn('SMS Gateway API Key is not configured in settings.');
        return otpCode;
     }
     try {
-      await axios.get('https://www.fast2sms.com/dev/bulkV2', {
-        params: {
-          authorization: settings.fast2smsApiKey,
-          variables_values: otpCode,
-          route: 'otp',
-          numbers: identifier,
+      await axios.post('https://sms-gate-way.onrender.com/api/v1/messages', {
+        to: identifier,
+        message: `Your OTP for login is ${otpCode}. It is valid for 5 minutes.`,
+        channel: 'sms'
+      }, {
+        headers: {
+          'x-api-key': settings.smsGatewayApiKey,
+          'Content-Type': 'application/json'
         }
       });
       logger.info(`[SMS SERVICE] OTP sent successfully to mobile: ${identifier}`);
     } catch (error) {
       logger.error(`Failed to send mobile OTP: ${error}`);
-      throw new Error('Failed to send mobile OTP via Fast2SMS');
+      throw new Error('Failed to send mobile OTP via SMS Gateway');
     }
   }
   return otpCode;

@@ -3,8 +3,9 @@
  */
 
 export interface userDTO {
-  mobileNumber: string;
+  mobileNumber?: string;
   email?: string;
+  password?: string;
   gender?: string;
   username?: string;
   displayName?: string;

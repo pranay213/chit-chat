@@ -15,15 +15,59 @@
             "type": "string"
           },
           "role": {
-            "type": "string",
-            "enum": [
-              "SUPER_ADMIN",
-              "admin",
-              "support"
-            ]
+            "type": "string"
           },
           "isActive": {
             "type": "boolean"
+          },
+          "_id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "callLog": {
+        "title": "CallLog",
+        "required": [
+          "callerId",
+          "receiverId",
+          "type",
+          "status"
+        ],
+        "properties": {
+          "callerId": {
+            "type": "schemaobjectid"
+          },
+          "receiverId": {
+            "type": "schemaobjectid"
+          },
+          "chatId": {
+            "type": "schemaobjectid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "audio",
+              "video"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "missed",
+              "rejected",
+              "completed"
+            ]
+          },
+          "duration": {
+            "type": "number"
           },
           "_id": {
             "type": "string"
@@ -83,6 +127,7 @@
         "required": [
           "name",
           "code",
+          "code3",
           "dialCode"
         ],
         "properties": {
@@ -92,10 +137,16 @@
           "code": {
             "type": "string"
           },
+          "code3": {
+            "type": "string"
+          },
           "dialCode": {
             "type": "string"
           },
           "flagUrl": {
+            "type": "string"
+          },
+          "emoji": {
             "type": "string"
           },
           "isActive": {
@@ -183,6 +234,107 @@
           }
         }
       },
+      "role": {
+        "title": "Role",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "module": {
+                  "type": "string"
+                },
+                "actions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "create",
+                      "read",
+                      "update",
+                      "delete"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "module"
+              ]
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "_id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "session": {
+        "title": "Session",
+        "required": [
+          "userType",
+          "token",
+          "expiresAt"
+        ],
+        "properties": {
+          "userId": {
+            "type": "schemaobjectid"
+          },
+          "adminId": {
+            "type": "schemaobjectid"
+          },
+          "userType": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "user"
+            ]
+          },
+          "token": {
+            "type": "string"
+          },
+          "userAgent": {
+            "type": "string"
+          },
+          "ipAddress": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "_id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "setting": {
         "title": "Setting",
         "properties": {
@@ -201,7 +353,7 @@
           "smtpFromEmail": {
             "type": "string"
           },
-          "fast2smsApiKey": {
+          "smsGatewayApiKey": {
             "type": "string"
           },
           "updatedBy": {
@@ -220,16 +372,55 @@
           }
         }
       },
+      "status": {
+        "title": "Status",
+        "required": [
+          "userId",
+          "content"
+        ],
+        "properties": {
+          "userId": {
+            "type": "schemaobjectid"
+          },
+          "content": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "image"
+            ]
+          },
+          "mediaUrl": {
+            "type": "string"
+          },
+          "backgroundColor": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "_id": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "user": {
         "title": "User",
-        "required": [
-          "mobileNumber"
-        ],
         "properties": {
           "mobileNumber": {
             "type": "string"
           },
           "email": {
+            "type": "string"
+          },
+          "password": {
             "type": "string"
           },
           "gender": {

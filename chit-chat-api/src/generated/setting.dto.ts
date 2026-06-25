@@ -8,7 +8,7 @@ export interface settingDTO {
   smtpUser?: string;
   smtpPass?: string;
   smtpFromEmail?: string;
-  fast2smsApiKey?: string;
+  smsGatewayApiKey?: string;
   updatedBy?: string;
   _id?: string;
   createdAt?: Date | string;
