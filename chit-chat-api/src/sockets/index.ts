@@ -247,16 +247,16 @@ export const setupSockets = (io: Server) => {
                   bodyStr = attachments[0].type === 'image' ? '📷 Photo' : '📎 Attachment';
                 }
 
-                await sendPushNotification({
-                  to: tokens,
-                  title: chat.isGroup ? `${socket.data.userProfile?.displayName || 'User'} in ${chat.groupName}` : socket.data.userProfile?.displayName || 'User',
-                  body: bodyStr,
-                  categoryId: 'CHAT_MESSAGE',
-                  data: {
+                await sendPushNotification(
+                  tokens,
+                  chat.isGroup ? `${socket.data.userProfile?.displayName || 'User'} in ${chat.groupName}` : socket.data.userProfile?.displayName || 'User',
+                  bodyStr,
+                  {
                     chatId,
                     senderId: userId,
+                    categoryId: 'CHAT_MESSAGE',
                   }
-                });
+                );
               }
             }
           } catch (pushErr) {
