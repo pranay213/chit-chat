@@ -141,3 +141,7 @@ test-*.ts
 
 # Firebase Credentials
 google-services.json
+*-firebase-adminsdk-*.json
+
+# Automation scripts
+run_eas.py
