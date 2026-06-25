@@ -128,3 +128,13 @@ android/app/build/
 android/build/
 *.apk
 *.aab
+
+# ── Scratch / test files with secrets ────────────────────────────────────────
+# Never commit one-off test scripts or files that may contain API keys/secrets
+test*.txt
+test*.js
+test-*.js
+test-*.ts
+**/test-*.js
+**/test-*.ts
+**/test*.txt
