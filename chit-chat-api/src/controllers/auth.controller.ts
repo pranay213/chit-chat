@@ -20,9 +20,6 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
       otpCode = await generateAndSendOtp(mobileNumber, 'mobile');
     }
     const data: any = {};
-    if (process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development') {
-      data.mockOtp = otpCode; // Send back for easy testing
-    }
     successResponse(res, 200, SuccessMessages.AUTH.OTP_SENT, data);
   } catch (error) {
     errorResponse(res, 500, ErrorMessages.AUTH.OTP_SEND_FAILED, error);
@@ -37,15 +34,7 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
       errorResponse(res, 400, ErrorMessages.AUTH.MISSING_FIELDS);
       return;
     }
-    if (process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development') {
-      if (otp === process.env.MOCK_OTP) {
-        isOtpValid = true;
-      } else {
-        isOtpValid = await verifyOtpCode(email || mobileNumber, otp);
-      }
-    } else {
-      isOtpValid = await verifyOtpCode(email || mobileNumber, otp);
-    }
+    isOtpValid = await verifyOtpCode(email || mobileNumber, otp);
     if (isOtpValid) {
       let user;
       if (email) {
