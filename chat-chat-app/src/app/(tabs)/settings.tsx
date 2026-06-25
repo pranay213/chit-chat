@@ -10,8 +10,10 @@ import {
   ScrollView, 
   Alert, 
   ActivityIndicator,
-  FlatList
+  FlatList,
+  Switch
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -143,7 +145,33 @@ export default function SettingsScreen() {
     return () => clearTimeout(delayDebounceFn);
   }, [username, token, user]);
 
+
+  const [notificationsModalVisible, setNotificationsModalVisible] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Notification settings state
+  const [ringtone, setRingtone] = useState('Default');
+  const [vibration, setVibration] = useState(true);
+  const [notificationColor, setNotificationColor] = useState('#7E57C2');
+
+  useEffect(() => {
+    // Load saved notification settings
+    AsyncStorage.getItem('notification_settings').then(val => {
+      if (val) {
+        const parsed = JSON.parse(val);
+        setRingtone(parsed.ringtone || 'Default');
+        setVibration(parsed.vibration ?? true);
+        setNotificationColor(parsed.color || '#7E57C2');
+      }
+    });
+  }, []);
+
+  const saveNotificationSettings = async () => {
+    const settings = { ringtone, vibration, color: notificationColor };
+    await AsyncStorage.setItem('notification_settings', JSON.stringify(settings));
+    setNotificationsModalVisible(false);
+    Alert.alert('Settings Saved', 'Notification preferences have been updated.');
+  };
 
   const handleSelectAndUploadImage = () => {
     Alert.alert(
@@ -425,7 +453,7 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={18} color="#CCC" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('Notifications', 'Customize notification sounds and alerts.')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => setNotificationsModalVisible(true)}>
             <Ionicons name="notifications-outline" size={22} color="#555" style={styles.menuIcon} />
             <View style={styles.menuTextContainer}>
               <Text style={styles.menuTitle}>Notifications</Text>
@@ -698,6 +726,77 @@ export default function SettingsScreen() {
           )}
         </SafeAreaView>
       </Modal>
+
+      {/* Notifications Settings Modal */}
+      <Modal
+        visible={notificationsModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setNotificationsModalVisible(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFF' }}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setNotificationsModalVisible(false)}>
+              <Text style={{ fontSize: 16, color: '#FF3B30' }}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Notifications</Text>
+            <TouchableOpacity onPress={saveNotificationSettings}>
+              <Text style={styles.modalSaveText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={{ padding: 20 }}>
+            <Text style={styles.sectionHeaderText}>Messages</Text>
+            
+            <View style={styles.menuItem}>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Notification Tone</Text>
+                <Text style={styles.menuSubtitle}>{ringtone}</Text>
+              </View>
+              <TouchableOpacity onPress={() => {
+                Alert.alert('Select Tone', 'Choose your notification sound', [
+                  { text: 'Default', onPress: () => setRingtone('Default') },
+                  { text: 'Chime', onPress: () => setRingtone('Chime') },
+                  { text: 'Droplet', onPress: () => setRingtone('Droplet') },
+                  { text: 'Cancel', style: 'cancel' }
+                ])
+              }}>
+                <Text style={{ color: '#7E57C2' }}>Change</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.menuItem}>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Vibrate</Text>
+              </View>
+              <Switch 
+                value={vibration} 
+                onValueChange={setVibration}
+                trackColor={{ false: '#767577', true: '#7E57C2' }}
+              />
+            </View>
+
+            <View style={styles.menuItem}>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Light Color</Text>
+                <Text style={styles.menuSubtitle}>{notificationColor}</Text>
+              </View>
+              <TouchableOpacity onPress={() => {
+                Alert.alert('Select Color', 'Choose your LED notification color', [
+                  { text: 'Purple', onPress: () => setNotificationColor('#7E57C2') },
+                  { text: 'Blue', onPress: () => setNotificationColor('#1E88E5') },
+                  { text: 'Green', onPress: () => setNotificationColor('#43A047') },
+                  { text: 'Red', onPress: () => setNotificationColor('#E53935') },
+                  { text: 'Cancel', style: 'cancel' }
+                ])
+              }}>
+                <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: notificationColor }} />
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
     </SafeAreaView>
   );
 }

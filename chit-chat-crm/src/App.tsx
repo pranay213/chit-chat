@@ -410,7 +410,9 @@ const UsersPage = () => {
                   <th>Identifier</th>
                   <th>Username</th>
                   <th>Status</th>
+                  <th>Account</th>
                   <th>Joined</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -420,10 +422,27 @@ const UsersPage = () => {
                     <td>{u.email || u.mobileNumber}</td>
                     <td>{u.username || '-'}</td>
                     <td><span className={`badge ${u.status === 'online' ? 'badge-success' : 'badge-warning'}`}>{u.status || 'offline'}</span></td>
+                    <td><span className={`badge ${u.accountStatus === 'blocked' ? 'badge-danger' : 'badge-primary'}`}>{u.accountStatus || 'active'}</span></td>
                     <td>{new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td>
+                      <button 
+                        onClick={() => {
+                          const newStatus = u.accountStatus === 'blocked' ? 'active' : 'blocked';
+                          if (window.confirm(`Are you sure you want to ${newStatus === 'blocked' ? 'block' : 'unblock'} this user?`)) {
+                            axios.put(`${API_URL}/users/${u._id}`, { accountStatus: newStatus })
+                              .then(() => fetchUsers())
+                              .catch(() => alert('Failed to update status'));
+                          }
+                        }}
+                        className="btn"
+                        style={{ padding: '4px 8px', fontSize: '0.75rem', background: u.accountStatus === 'blocked' ? 'var(--success)' : 'var(--danger)' }}
+                      >
+                        {u.accountStatus === 'blocked' ? 'Unblock' : 'Block'}
+                      </button>
+                    </td>
                   </tr>
                 ))}
-                {users.length === 0 && <tr><td colSpan={5} style={{textAlign: 'center', color: 'var(--text-muted)'}}>No users found matching criteria</td></tr>}
+                {users.length === 0 && <tr><td colSpan={7} style={{textAlign: 'center', color: 'var(--text-muted)'}}>No users found matching criteria</td></tr>}
               </tbody>
             </table>
             
@@ -545,18 +564,66 @@ const SettingsPage = () => {
   );
 };
 
-const ChatPreviewPage = () => (
-  <Layout>
-    <h1>Active Chats Preview</h1>
-    <div className="chat-wrapper">
-      <div style={{ padding: '2rem', textAlign: 'center', margin: 'auto', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', backdropFilter: 'blur(10px)' }}>
-        <MessageSquare size={48} color="var(--accent-primary)" style={{ marginBottom: '1rem' }} />
-        <h2>Global Chat Moderation</h2>
-        <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Select a user conversation to begin monitoring in real-time.</p>
-      </div>
-    </div>
-  </Layout>
-);
+const ChatPreviewPage = () => {
+  const [chats, setChats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Assuming backend endpoint /admin/chats exists, otherwise this will fail gracefully
+    axios.get(`${API_URL}/chats`)
+      .then(res => setChats(res.data.data?.data || res.data.data || []))
+      .catch(err => console.error("Error fetching chats", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <Layout>
+      <h1>Global Chat Moderation</h1>
+      {loading ? <Loader /> : (
+        <div className="glass-card" style={{ marginTop: '1rem' }}>
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Chat ID</th>
+                  <th>Type</th>
+                  <th>Name / Participants</th>
+                  <th>Last Message</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chats.map(chat => (
+                  <tr key={chat._id}>
+                    <td>{chat._id.substring(0, 8)}...</td>
+                    <td><span className={`badge ${chat.isGroup ? 'badge-primary' : 'badge-warning'}`}>{chat.isGroup ? 'Group' : 'Direct'}</span></td>
+                    <td>
+                      {chat.isGroup ? chat.groupName : chat.participants?.map((p: any) => p.displayName || p.mobileNumber).join(', ')}
+                    </td>
+                    <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {chat.lastMessage?.text || (chat.lastMessage?.attachments?.length ? 'Media attached' : 'No messages')}
+                    </td>
+                    <td>
+                      <button className="btn btn-primary" style={{ padding: '4px 8px', fontSize: '0.75rem' }}>View History</button>
+                    </td>
+                  </tr>
+                ))}
+                {chats.length === 0 && (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                      <MessageSquare size={48} color="var(--text-muted)" style={{ margin: '0 auto 1rem' }} />
+                      <p style={{ color: 'var(--text-muted)' }}>No chats found or API endpoint missing.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </Layout>
+  );
+};
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('adminToken');

@@ -21,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
-import { Audio } from 'expo-av';
+// import { Audio } from 'expo-av';
 import MapView, { Marker } from 'react-native-maps';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -108,6 +108,52 @@ const TypingIndicator = () => {
   );
 };
 
+const MessageSkeleton = () => {
+  const animatedValue = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animatedValue, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animatedValue, {
+          toValue: 0.3,
+          duration: 1000,
+          useNativeDriver: true,
+        })
+      ])
+    ).start();
+  }, [animatedValue]);
+
+  return (
+    <View style={{ padding: 16, width: '100%', gap: 16 }}>
+      {[...Array(6)].map((_, i) => (
+        <View key={i} style={{
+          alignSelf: i % 2 === 0 ? 'flex-end' : 'flex-start',
+          flexDirection: 'row',
+          alignItems: 'flex-end',
+          gap: 8,
+          opacity: i > 3 ? 0.5 : 1
+        }}>
+          {i % 2 !== 0 && (
+            <Animated.View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#E0E0E0', opacity: animatedValue }} />
+          )}
+          <Animated.View style={{ 
+            width: i % 3 === 0 ? 120 : i % 2 === 0 ? 200 : 160, 
+            height: 40, 
+            borderRadius: 16, 
+            backgroundColor: '#E0E0E0', 
+            opacity: animatedValue 
+          }} />
+        </View>
+      ))}
+    </View>
+  );
+};
+
 export default function ChatScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -121,9 +167,9 @@ export default function ChatScreen() {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [recording, setRecording] = useState<any | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [sound, setSound] = useState<any | null>(null);
   const [typingUser, setTypingUser] = useState('');
   const [liveLocations, setLiveLocations] = useState<{ [userId: string]: { lat: number, lng: number } }>({});
   const [isSharingLiveLoc, setIsSharingLiveLoc] = useState(false);
@@ -166,6 +212,15 @@ export default function ChatScreen() {
 
   useEffect(() => {
     fetchMessages();
+
+    const handleNewMessage = (msg: any) => {
+      if (msg.chatId === chatId.toString()) {
+        setMessages((prev: any) => [...prev, msg]);
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    };
 
     if (socket) {
       // Join Room
@@ -342,19 +397,19 @@ export default function ChatScreen() {
 
   const startRecording = async () => {
     try {
-      const perm = await Audio.requestPermissionsAsync();
-      if (perm.status === 'granted') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        setIsRecording(true);
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
-        });
-        const { recording } = await Audio.Recording.createAsync(
-          Audio.RecordingOptionsPresets.HIGH_QUALITY
-        );
-        setRecording(recording);
-      }
+      // const perm = await Audio.requestPermissionsAsync();
+      // if (perm.status === 'granted') {
+      //   await Audio.setAudioModeAsync({
+      //     allowsRecordingIOS: true,
+      //     playsInSilentModeIOS: true,
+      //   });
+      //   const { recording } = await Audio.Recording.createAsync(
+      //     Audio.RecordingOptionsPresets.HIGH_QUALITY
+      //   );
+      //   setRecording(recording);
+      //   setIsRecording(true);
+      // }
+      console.log('Audio recording temporarily disabled');
     } catch (err) {
       console.error('Failed to start recording', err);
       setIsRecording(false);
@@ -380,9 +435,10 @@ export default function ChatScreen() {
     if (sound) {
       await sound.unloadAsync();
     }
-    const { sound: newSound } = await Audio.Sound.createAsync({ uri });
-    setSound(newSound);
-    await newSound.playAsync();
+    // const { sound: newSound } = await Audio.Sound.createAsync({ uri });
+    // setSound(newSound);
+    // await newSound.playAsync();
+    console.log('Audio playback temporarily disabled');
   };
 
   const handleTyping = (text: string) => {
@@ -520,9 +576,7 @@ export default function ChatScreen() {
           <View style={styles.wallpaperOverlay} />
           
           {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#7E57C2" />
-            </View>
+            <MessageSkeleton />
           ) : (
             <FlatList
               ref={flatListRef}

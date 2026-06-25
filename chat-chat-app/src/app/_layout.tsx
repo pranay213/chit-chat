@@ -63,7 +63,7 @@ function RootLayoutNav() {
         router.push({
           pathname: '/chat/[id]',
           params: {
-            id: data.chatId,
+            id: String(data.chatId),
             chatName: response.notification.request.content.title || 'Chat',
             isGroup: 'false', // Assuming it's not a group, or we need to pass this in payload
             isOnline: 'false'
@@ -73,7 +73,7 @@ function RootLayoutNav() {
     });
 
     return () => {
-      Notifications.removeNotificationSubscription(responseListener);
+      responseListener.remove();
     };
   }, []);
 

@@ -81,14 +81,14 @@ export default function CallScreen() {
         pc.current?.addTrack(track, stream);
       });
 
-      pc.current.ontrack = (event) => {
+      (pc.current as any).ontrack = (event: any) => {
         if (event.streams && event.streams[0]) {
           setRemoteStream(event.streams[0]);
           setCallState('connected');
         }
       };
 
-      pc.current.onicecandidate = (event) => {
+      (pc.current as any).onicecandidate = (event: any) => {
         if (event.candidate) {
           socket.emit('webrtcIceCandidate', {
             to: receiverId,
@@ -124,7 +124,7 @@ export default function CallScreen() {
       }
 
       socket.on('callAccepted', async (signal: any) => {
-        if (pc.current && !pc.current.currentRemoteDescription) {
+        if (pc.current && !pc.current.remoteDescription) {
           await pc.current.setRemoteDescription(new RTCSessionDescription(signal));
           setCallState('connected');
         }
@@ -185,7 +185,7 @@ export default function CallScreen() {
         receiverId,
         chatId: chatId,
         type: callType,
-        status: timer > 0 ? 'completed' : status,
+        status: (timer > 0 ? 'completed' : status) as 'missed' | 'rejected' | 'completed',
         duration: timer
       }).catch(err => console.log('Error log', err));
     }

@@ -5,6 +5,7 @@ import { getSettings, updateSettings } from '../controllers/setting.controller';
 import { createRole, getRoles, getRoleById, updateRole, deleteRole } from '../controllers/role.controller';
 import { getSessionsAdmin, revokeSession } from '../controllers/session.controller';
 import { createUser, getUsers, getUserById, updateUser, deleteUser } from '../controllers/user.controller';
+import { getAllChatsAdmin, getChatMessages } from '../controllers/chat.controller';
 import { authenticateAdmin, requireSuperAdmin } from '../middlewares/admin.middleware';
 
 const router = Router();
@@ -40,6 +41,10 @@ router.get('/users', getUsers);
 router.get('/users/:id', getUserById);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
+
+// Global Chat Management (Admin & Super Admin)
+router.get('/chats', getAllChatsAdmin);
+router.get('/chats/:chatId/messages', getChatMessages);
 
 // Dynamic Role Management
 router.post('/roles', requireSuperAdmin, createRole);

@@ -9,7 +9,7 @@ const LOCATION_TASK_NAME = 'background-location-task';
 let activeLocationChats = new Set<string>();
 let activeUserId = '';
 
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   if (error) {
     console.error('Background location task error:', error);
     return;

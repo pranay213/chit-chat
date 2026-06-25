@@ -6,6 +6,24 @@ import { successResponse, errorResponse } from '../utils/response';
 import { executePaginatedQuery } from '../utils/queryParser';
 import { ErrorMessages, SuccessMessages } from '../constants/errors';
 
+export const getAllChatsAdmin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const query = {
+      sort: '-updatedAt',
+      limit: 50,
+      ...req.query
+    };
+    const populate = [
+      { path: 'participants', select: 'displayName profileImage status lastSeen mobileNumber email' },
+      { path: 'lastMessage' }
+    ];
+    const paginatedChats = await executePaginatedQuery(Chat, query, populate);
+    successResponse(res, 200, SuccessMessages.CHAT.FETCHED, paginatedChats);
+  } catch (error) {
+    errorResponse(res, 500, ErrorMessages.CHAT.FETCHED_FAILED, error);
+  }
+};
+
 export const getUserChats = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
