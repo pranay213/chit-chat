@@ -1,10 +1,49 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { getSocket } from '../../services/socket';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket) {
+      socket.on('incomingCall', (data: any) => {
+        Alert.alert(
+          'Incoming Call',
+          `${data.name} is calling you`,
+          [
+            { text: 'Decline', style: 'cancel', onPress: () => {
+              socket.emit('rejectCall', { to: data.from });
+            }},
+            { text: 'Accept', onPress: () => {
+              router.push({
+                pathname: '/call',
+                params: {
+                  chatId: data.chatId || '',
+                  type: 'video', // we can extract type from signal or payload if added
+                  callerName: data.name,
+                  receiverId: data.from,
+                  isIncoming: 'true',
+                  signal: JSON.stringify(data.signal)
+                }
+              });
+            }}
+          ]
+        );
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('incomingCall');
+      }
+    };
+  }, []);
 
   return (
     <>

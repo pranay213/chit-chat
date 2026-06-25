@@ -22,9 +22,11 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
+import MapView, { Marker } from 'react-native-maps';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { getSocket } from '../../services/socket';
+import { startLocationSharing, stopLocationSharing, isSharingLocation } from '../../services/location';
 
 const whatsappWallpaper = require('../../../assets/images/whatsapp_wallpaper.png');
 
@@ -123,6 +125,8 @@ export default function ChatScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [typingUser, setTypingUser] = useState('');
+  const [liveLocations, setLiveLocations] = useState<{ [userId: string]: { lat: number, lng: number } }>({});
+  const [isSharingLiveLoc, setIsSharingLiveLoc] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
   const socket = getSocket();
@@ -167,33 +171,42 @@ export default function ChatScreen() {
       // Join Room
       socket.emit('joinChat', chatId);
 
-      // Listen for message events
-      socket.on('message', (message: any) => {
-        if (message.chatId === chatId) {
-          setMessages((prev) => [...prev, message]);
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 100);
-        }
-      });
-
+      socket.on('message', handleNewMessage);
+        
       socket.on('typing', (data: any) => {
-        if (data.chatId === chatId && data.userId !== user?._id) {
+        if (data.chatId === chatId.toString() && data.userId !== user?._id) {
+          setTypingUser(data.userId);
           setIsTyping(true);
-          setTypingUser(isGroup ? 'Someone' : headerName);
         }
       });
 
       socket.on('stopTyping', (data: any) => {
-        if (data.chatId === chatId && data.userId !== user?._id) {
+        if (data.chatId === chatId.toString() && data.userId !== user?._id) {
           setIsTyping(false);
+          setTypingUser('');
         }
       });
 
-      // Live profile update: update header if this is a 1-1 chat with the user who changed
+      socket.on('locationUpdate', (data: any) => {
+        if (data.chatId === chatId.toString()) {
+          setLiveLocations(prev => ({
+            ...prev,
+            [data.userId]: { lat: data.lat, lng: data.lng }
+          }));
+        }
+      });
+
+      socket.on('locationStopped', (data: any) => {
+        if (data.chatId === chatId.toString()) {
+          setLiveLocations(prev => {
+            const newLocs = { ...prev };
+            delete newLocs[data.userId];
+            return newLocs;
+          });
+        }
+      });
+
       socket.on('userProfileUpdated', (data: { userId: string; displayName?: string; profileImage?: string | null }) => {
-        // In 1-1 chats, the chatName/chatAvatar come from the other participant
-        // We patch the header if the sender is not ourselves
         if (!isGroup && data.userId !== user?._id) {
           if (data.displayName) setHeaderName(data.displayName);
           if (data.profileImage !== undefined) setHeaderAvatar(data.profileImage || '');
@@ -203,14 +216,19 @@ export default function ChatScreen() {
 
     return () => {
       if (socket) {
-        socket.emit('leaveChat', chatId);
-        socket.off('message');
+        socket.off('message', handleNewMessage);
         socket.off('typing');
         socket.off('stopTyping');
-        socket.off('userProfileUpdated');
+        socket.off('locationUpdate');
+        socket.off('locationStopped');
+        socket.emit('leaveChat', chatId.toString());
       }
     };
-  }, [chatId, token]);
+  }, [socket, chatId, user]);
+
+  useEffect(() => {
+    setIsSharingLiveLoc(isSharingLocation(chatId.toString()));
+  }, [chatId]);
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -221,7 +239,6 @@ export default function ChatScreen() {
     setInputText('');
 
     if (socket) {
-      // Emit socket message
       socket.emit('sendMessage', {
         chatId: chatId.toString(),
         text: textToSend,
@@ -229,7 +246,6 @@ export default function ChatScreen() {
 
       socket.emit('stopTyping', chatId);
     } else {
-      // Fallback local representation if offline/initializing
       const newMsg: Message = {
         _id: Math.random().toString(),
         chatId: chatId.toString(),
@@ -252,12 +268,21 @@ export default function ChatScreen() {
         { text: 'Cancel', style: 'cancel' },
         { text: 'Photo Library', onPress: () => pickImage(false) },
         { text: 'Document', onPress: pickDocument },
+        { text: isSharingLiveLoc ? 'Stop Live Location' : 'Share Live Location', onPress: toggleLiveLocation },
       ]
     );
   };
 
-  const handleCamera = () => {
-    pickImage(true);
+  const toggleLiveLocation = async () => {
+    if (isSharingLiveLoc) {
+      await stopLocationSharing(chatId.toString());
+      setIsSharingLiveLoc(false);
+    } else {
+      if (user?._id) {
+        await startLocationSharing(chatId.toString(), user._id);
+        setIsSharingLiveLoc(true);
+      }
+    }
   };
 
   const pickImage = async (useCamera: boolean) => {
@@ -285,7 +310,7 @@ export default function ChatScreen() {
     }
   };
 
-  const uploadAndSendMedia = async (uri: string, type: 'image' | 'file', fileName: string) => {
+  const uploadAndSendMedia = async (uri: string, type: 'image' | 'file' | 'audio', fileName: string) => {
     if (!token) return;
     setLoading(true);
     try {
@@ -309,6 +334,10 @@ export default function ChatScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCamera = () => {
+    pickImage(true);
   };
 
   const startRecording = async () => {
@@ -377,7 +406,6 @@ export default function ChatScreen() {
     }
   };
 
-  // Assign user profile color for group chats
   const getParticipantColor = (name: string) => {
     const colors = ['#E53935', '#1E88E5', '#43A047', '#D81B60', '#F4511E', '#7E57C2'];
     let hash = 0;
@@ -396,7 +424,6 @@ export default function ChatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        {/* Top Header Bar */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -461,12 +488,35 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        {/* Main Wallpaper/Doodle Background Area */}
         <ImageBackground 
           source={whatsappWallpaper} 
           style={styles.chatContainer}
           resizeMode="cover"
         >
+          {Object.keys(liveLocations).length > 0 && (
+            <View style={{ height: 200, width: '100%', borderBottomWidth: 1, borderBottomColor: '#CCC' }}>
+              <MapView 
+                style={{ flex: 1 }}
+                initialRegion={{
+                  latitude: Object.values(liveLocations)[0].lat,
+                  longitude: Object.values(liveLocations)[0].lng,
+                  latitudeDelta: 0.0922,
+                  longitudeDelta: 0.0421,
+                }}
+              >
+                {Object.entries(liveLocations).map(([uid, loc]) => (
+                  <Marker
+                    key={uid}
+                    coordinate={{ latitude: loc.lat, longitude: loc.lng }}
+                    title={uid === user?._id ? "Me" : "Participant"}
+                    description="Live Location"
+                    pinColor={uid === user?._id ? "blue" : "red"}
+                  />
+                ))}
+              </MapView>
+            </View>
+          )}
+
           <View style={styles.wallpaperOverlay} />
           
           {loading ? (

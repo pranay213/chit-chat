@@ -281,6 +281,18 @@ export const setupSockets = (io: Server) => {
       socket.to(`chat:${chatId}`).emit(SocketEvents.STOP_TYPING, { chatId, userId });
     });
 
+    // Location Sharing
+    socket.on('locationUpdate', (payload: { chatId: string; lat: number; lng: number; userId: string }) => {
+      const { chatId, lat, lng, userId: senderId } = payload;
+      // Broadcast live location to other participants
+      socket.to(`chat:${chatId}`).emit('locationUpdate', { chatId, lat, lng, userId: senderId });
+    });
+
+    socket.on('locationStopped', (payload: { chatId: string; userId: string }) => {
+      const { chatId, userId: senderId } = payload;
+      socket.to(`chat:${chatId}`).emit('locationStopped', { chatId, userId: senderId });
+    });
+
     // Message Status Update Events (Read / Delivered acknowledgments)
     socket.on(SocketEvents.MESSAGE_READ, (payload: { chatId: string; messageId: string }) => {
       const { chatId, messageId } = payload;
