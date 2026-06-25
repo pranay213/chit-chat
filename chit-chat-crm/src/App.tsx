@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { 
   LayoutDashboard, Users, Shield, Settings, 
-  MessageSquare, Phone, Activity, Bell, Search, LogOut, Menu, X 
+  MessageSquare, Phone, Activity, Bell, Search, LogOut, Menu, X, Sun, Moon, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import './index.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1/admin';
 
-// --- Axios Interceptor ---
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem('adminToken');
   if (token) {
@@ -18,8 +17,14 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-// --- Components ---
-const Sidebar = ({ isOpen, toggleSidebar }: { isOpen: boolean, toggleSidebar: () => void }) => {
+// --- UI Components ---
+const Loader = () => (
+  <div className="loader-container">
+    <div className="spinner"></div>
+  </div>
+);
+
+const Sidebar = ({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: any) => {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path ? 'active' : '';
 
@@ -31,8 +36,8 @@ const Sidebar = ({ isOpen, toggleSidebar }: { isOpen: boolean, toggleSidebar: ()
   return (
     <>
       <div className={`sidebar-overlay ${isOpen ? 'open' : ''}`} onClick={toggleSidebar}></div>
-      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-        <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
+        <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <MessageSquare className="sidebar-brand-icon" size={28} />
             <span>ChitChat CRM</span>
@@ -42,29 +47,32 @@ const Sidebar = ({ isOpen, toggleSidebar }: { isOpen: boolean, toggleSidebar: ()
           </button>
         </div>
         <nav className="nav-menu">
-          <Link to="/" onClick={toggleSidebar} className={`nav-item ${isActive('/')}`}>
-            <LayoutDashboard size={20} /> Dashboard
+          <Link to="/" onClick={() => window.innerWidth <= 768 && toggleSidebar()} className={`nav-item ${isActive('/')}`}>
+            <LayoutDashboard size={20} /> <span>Dashboard</span>
           </Link>
-          <Link to="/users" onClick={toggleSidebar} className={`nav-item ${isActive('/users')}`}>
-            <Users size={20} /> Users
+          <Link to="/users" onClick={() => window.innerWidth <= 768 && toggleSidebar()} className={`nav-item ${isActive('/users')}`}>
+            <Users size={20} /> <span>Users</span>
           </Link>
-          <Link to="/roles" onClick={toggleSidebar} className={`nav-item ${isActive('/roles')}`}>
-            <Shield size={20} /> Roles & Permissions
+          <Link to="/roles" onClick={() => window.innerWidth <= 768 && toggleSidebar()} className={`nav-item ${isActive('/roles')}`}>
+            <Shield size={20} /> <span>Roles & Permissions</span>
           </Link>
-          <Link to="/chats" onClick={toggleSidebar} className={`nav-item ${isActive('/chats')}`}>
-            <MessageSquare size={20} /> Chats
+          <Link to="/chats" onClick={() => window.innerWidth <= 768 && toggleSidebar()} className={`nav-item ${isActive('/chats')}`}>
+            <MessageSquare size={20} /> <span>Chats</span>
           </Link>
-          <Link to="/calls" onClick={toggleSidebar} className={`nav-item ${isActive('/calls')}`}>
-            <Phone size={20} /> Call Logs
+          <Link to="/calls" onClick={() => window.innerWidth <= 768 && toggleSidebar()} className={`nav-item ${isActive('/calls')}`}>
+            <Phone size={20} /> <span>Call Logs</span>
           </Link>
-          <Link to="/settings" onClick={toggleSidebar} className={`nav-item ${isActive('/settings')}`}>
-            <Settings size={20} /> System Settings
+          <Link to="/settings" onClick={() => window.innerWidth <= 768 && toggleSidebar()} className={`nav-item ${isActive('/settings')}`}>
+            <Settings size={20} /> <span>System Settings</span>
           </Link>
         </nav>
         
-        <div style={{ marginTop: 'auto' }}>
-          <button onClick={handleLogout} className="nav-item" style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer' }}>
-            <LogOut size={20} /> Logout
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <button onClick={toggleCollapse} className="nav-item hide-on-mobile" style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer' }}>
+            {isCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />} <span>Collapse</span>
+          </button>
+          <button onClick={handleLogout} className="nav-item" style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>
+            <LogOut size={20} /> <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -72,18 +80,17 @@ const Sidebar = ({ isOpen, toggleSidebar }: { isOpen: boolean, toggleSidebar: ()
   );
 };
 
-const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => (
+const Header = ({ toggleSidebar, theme, toggleTheme }: any) => (
   <header className="header">
     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
       <button className="mobile-toggle" onClick={toggleSidebar}>
         <Menu size={24} />
       </button>
-      <div className="form-input" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', maxWidth: '300px' }}>
-        <Search size={18} color="var(--text-muted)" />
-        <input type="text" placeholder="Search..." style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%' }} />
-      </div>
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
       <div style={{ position: 'relative', cursor: 'pointer' }}>
         <Bell size={20} color="var(--text-secondary)" />
         <span style={{ position: 'absolute', top: '-4px', right: '-4px', width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%' }}></span>
@@ -101,13 +108,32 @@ const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => (
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', sidebarCollapsed.toString());
+  }, [sidebarCollapsed]);
 
   return (
     <div className="app-container">
-      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+        isCollapsed={sidebarCollapsed} 
+        toggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
       <main className="main-content">
-        <Header toggleSidebar={toggleSidebar} />
+        <Header 
+          toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+          theme={theme} 
+          toggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')} 
+        />
         <div className="page-wrapper">
           {children}
         </div>
@@ -121,10 +147,16 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'dark'); // Force dark for login
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await axios.post(`${API_URL}/login`, { email, password });
       if (res.data?.token) {
@@ -135,6 +167,8 @@ const LoginPage = () => {
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -155,7 +189,9 @@ const LoginPage = () => {
             <label className="form-label">Password</label>
             <input type="password" required className="form-input" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Login</button>
+          <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%' }}>
+            {loading ? 'Authenticating...' : 'Login'}
+          </button>
         </form>
       </div>
     </div>
@@ -163,29 +199,32 @@ const LoginPage = () => {
 };
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({ users: 0, roles: 0, calls: 0, chats: 0 });
+  const [stats, setStats] = useState({ users: 0, roles: 0 });
   const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [usersRes, rolesRes] = await Promise.all([
-          axios.get(`${API_URL}/users`),
+          axios.get(`${API_URL}/users?limit=5`),
           axios.get(`${API_URL}/roles`)
         ]);
-        setUsers(usersRes.data.data?.slice(0, 5) || []);
+        setUsers(usersRes.data.data?.data || usersRes.data.data || []);
         setStats({
-          users: usersRes.data.data?.length || 0,
-          roles: rolesRes.data.data?.length || 0,
-          calls: 142, // Real API integration pending for counts
-          chats: 34
+          users: usersRes.data.data?.pagination?.total || usersRes.data.data?.length || 0,
+          roles: rolesRes.data.data?.length || 0
         });
       } catch (err) {
         console.error("Dashboard fetch error", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, []);
+
+  if (loading) return <Layout><Loader /></Layout>;
 
   return (
     <Layout>
@@ -240,43 +279,111 @@ const Dashboard = () => {
 };
 
 const UsersPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const page = searchParams.get('page') || '1';
+      const search = searchParams.get('search') || '';
+      const res = await axios.get(`${API_URL}/users`, { params: { page, limit: 10, search } });
+      const data = res.data.data;
+      if (data.data && data.pagination) {
+        setUsers(data.data);
+        setPagination(data.pagination);
+      } else {
+        setUsers(data); // Fallback if not paginated
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    axios.get(`${API_URL}/users`).then(res => setUsers(res.data.data || [])).catch(console.error);
-  }, []);
+    fetchUsers();
+    // eslint-disable-next-line
+  }, [searchParams]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchParams({ search: searchInput, page: '1' });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > pagination.totalPages) return;
+    searchParams.set('page', newPage.toString());
+    setSearchParams(searchParams);
+  };
 
   return (
     <Layout>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h1>Users Management</h1>
-        <button className="btn btn-primary">Add New User</button>
-      </div>
-      <div className="glass-card">
-        <div className="table-container">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Identifier</th>
-                <th>Username</th>
-                <th>Status</th>
-                <th>Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u: any) => (
-                <tr key={u._id}>
-                  <td>{u._id.substring(0, 8)}...</td>
-                  <td>{u.email || u.mobileNumber}</td>
-                  <td>{u.username || '-'}</td>
-                  <td><span className={`badge ${u.status === 'online' ? 'badge-success' : 'badge-warning'}`}>{u.status || 'offline'}</span></td>
-                  <td>{new Date(u.createdAt).toLocaleDateString()}</td>
-                </tr>
-              ))}
-              {users.length === 0 && <tr><td colSpan={5} style={{textAlign: 'center', color: 'var(--text-muted)'}}>No users found</td></tr>}
-            </tbody>
-          </table>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <form onSubmit={handleSearch} className="form-input" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 12px', background: 'var(--bg-card)' }}>
+            <Search size={18} color="var(--text-muted)" />
+            <input 
+              type="text" 
+              placeholder="Search user..." 
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none' }} 
+            />
+          </form>
+          <button className="btn btn-primary hide-on-mobile">Add New User</button>
         </div>
+      </div>
+      
+      <div className="glass-card">
+        {loading ? <Loader /> : (
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Identifier</th>
+                  <th>Username</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u: any) => (
+                  <tr key={u._id}>
+                    <td>{u._id.substring(0, 8)}...</td>
+                    <td>{u.email || u.mobileNumber}</td>
+                    <td>{u.username || '-'}</td>
+                    <td><span className={`badge ${u.status === 'online' ? 'badge-success' : 'badge-warning'}`}>{u.status || 'offline'}</span></td>
+                    <td>{new Date(u.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+                {users.length === 0 && <tr><td colSpan={5} style={{textAlign: 'center', color: 'var(--text-muted)'}}>No users found matching criteria</td></tr>}
+              </tbody>
+            </table>
+            
+            {pagination.totalPages > 1 && (
+              <div className="pagination">
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Page {pagination.page} of {pagination.totalPages}</span>
+                <button 
+                  className="pagination-btn" 
+                  disabled={pagination.page === 1} 
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                ><ChevronLeft size={16} /></button>
+                <button 
+                  className="pagination-btn" 
+                  disabled={pagination.page === pagination.totalPages} 
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                ><ChevronRight size={16} /></button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </Layout>
   );
@@ -284,15 +391,19 @@ const UsersPage = () => {
 
 const RolesPage = () => {
   const [roles, setRoles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
-    axios.get(`${API_URL}/roles`).then(res => setRoles(res.data.data || [])).catch(console.error);
+    axios.get(`${API_URL}/roles`).then(res => setRoles(res.data.data || [])).catch(console.error).finally(() => setLoading(false));
   }, []);
+
+  if (loading) return <Layout><Loader /></Layout>;
 
   return (
     <Layout>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1>Roles & Permissions</h1>
-        <button className="btn btn-primary">Create Role</button>
+        <button className="btn btn-primary hide-on-mobile">Create Role</button>
       </div>
       <div className="stats-grid">
         {roles.map(role => (
@@ -310,17 +421,14 @@ const RolesPage = () => {
 
 const SettingsPage = () => {
   const [settings, setSettings] = useState<any>({
-    smsGatewayApiKey: '',
-    smtpHost: '',
-    smtpPort: '',
-    smtpFromEmail: '',
-    smtpUser: ''
+    smsGatewayApiKey: '', smtpHost: '', smtpPort: '', smtpFromEmail: '', smtpUser: ''
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios.get(`${API_URL}/settings`).then(res => {
       if (res.data.data) setSettings(res.data.data);
-    }).catch(console.error);
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -333,10 +441,11 @@ const SettingsPage = () => {
     }
   };
 
+  if (loading) return <Layout><Loader /></Layout>;
+
   return (
     <Layout>
       <h1>System Settings</h1>
-      
       <div className="settings-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
         <div className="glass-card">
           <h2>SMS Gateway Configuration</h2>
@@ -349,49 +458,19 @@ const SettingsPage = () => {
             <button type="submit" className="btn btn-primary">Save SMS Settings</button>
           </form>
         </div>
-
-        <div className="glass-card">
-          <h2>SMTP Email Configuration</h2>
-          <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>Configure email delivery for OTPs and notifications.</p>
-          <form onSubmit={handleSave}>
-            <div className="form-group">
-              <label className="form-label">SMTP Host</label>
-              <input type="text" className="form-input" value={settings.smtpHost || ''} onChange={e => setSettings({...settings, smtpHost: e.target.value})} />
-            </div>
-            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="form-group">
-                <label className="form-label">SMTP Port</label>
-                <input type="number" className="form-input" value={settings.smtpPort || ''} onChange={e => setSettings({...settings, smtpPort: parseInt(e.target.value)})} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">From Email</label>
-                <input type="email" className="form-input" value={settings.smtpFromEmail || ''} onChange={e => setSettings({...settings, smtpFromEmail: e.target.value})} />
-              </div>
-            </div>
-            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="form-group">
-                <label className="form-label">SMTP User</label>
-                <input type="text" className="form-input" value={settings.smtpUser || ''} onChange={e => setSettings({...settings, smtpUser: e.target.value})} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">SMTP Pass</label>
-                <input type="password" placeholder="********" className="form-input" onChange={e => setSettings({...settings, smtpPass: e.target.value})} />
-              </div>
-            </div>
-            <button type="submit" className="btn btn-primary">Save SMTP Settings</button>
-          </form>
-        </div>
       </div>
     </Layout>
   );
 };
 
-const PlaceholderPage = ({ title }: { title: string }) => (
+const ChatPreviewPage = () => (
   <Layout>
-    <h1>{title}</h1>
-    <div className="glass-card">
-      <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-        <p>{title} Module - Coming Soon</p>
+    <h1>Active Chats Preview</h1>
+    <div className="chat-wrapper">
+      <div style={{ padding: '2rem', textAlign: 'center', margin: 'auto', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', backdropFilter: 'blur(10px)' }}>
+        <MessageSquare size={48} color="var(--accent-primary)" style={{ marginBottom: '1rem' }} />
+        <h2>Global Chat Moderation</h2>
+        <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Select a user conversation to begin monitoring in real-time.</p>
       </div>
     </div>
   </Layout>
@@ -399,9 +478,7 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('adminToken');
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!token) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
@@ -410,12 +487,11 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
         <Route path="/roles" element={<ProtectedRoute><RolesPage /></ProtectedRoute>} />
-        <Route path="/chats" element={<ProtectedRoute><PlaceholderPage title="Chats Management" /></ProtectedRoute>} />
-        <Route path="/calls" element={<ProtectedRoute><PlaceholderPage title="Call Logs" /></ProtectedRoute>} />
+        <Route path="/chats" element={<ProtectedRoute><ChatPreviewPage /></ProtectedRoute>} />
+        <Route path="/calls" element={<ProtectedRoute><Layout><Loader /></Layout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
